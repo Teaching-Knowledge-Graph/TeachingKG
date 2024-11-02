@@ -6,4 +6,5 @@ A neo4j database is required for storing the information collected on the interf
 
 DB password should be modified in the function `init_neo4j_connection()` accordingly.
 
-## Run the code from the root directory with `streamlit run main_extended_alpha_version.py`
+## Run the code 
+From the root directory with `streamlit run main_extended_alpha_version.py`
