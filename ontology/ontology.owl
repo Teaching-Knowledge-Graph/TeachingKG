@@ -47,14 +47,6 @@
     
 
 
-    <!-- http://webprotege.stanford.edu/schema -->
-
-    <owl:AnnotationProperty rdf:about="http://webprotege.stanford.edu/schema">
-        <rdfs:label xml:lang="en">schema</rdfs:label>
-    </owl:AnnotationProperty>
-    
-
-
     <!-- http://www.w3.org/2004/02/skos/core#definition -->
 
     <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#definition"/>
@@ -70,29 +62,15 @@
      -->
 
     
-
-
-    <!-- http://webprotege.stanford.edu/RBeKZtSQtnAcIOl3EP41tBy -->
-
-    <rdfs:Datatype rdf:about="http://webprotege.stanford.edu/RBeKZtSQtnAcIOl3EP41tBy">
-        <rdfs:label xml:lang="en">PT1H</rdfs:label>
-    </rdfs:Datatype>
     
 
 
-    <!-- http://webprotege.stanford.edu/RGQkjj5BuTKrvbTVd3vH7x -->
+    <!-- http://github.com/naiayti/teachingKGonto/TopicType -->
 
-    <rdfs:Datatype rdf:about="http://webprotege.stanford.edu/RGQkjj5BuTKrvbTVd3vH7x">
+    <rdfs:Datatype rdf:about="http://github.com/naiayti/teachingKGonto/TopicType">
         <rdfs:label xml:lang="en">TopicType</rdfs:label>
     </rdfs:Datatype>
     
-
-
-    <!-- http://webprotege.stanford.edu/RWpFqEm9mNA8gM0JUbZbev -->
-
-    <rdfs:Datatype rdf:about="http://webprotege.stanford.edu/RWpFqEm9mNA8gM0JUbZbev">
-        <rdfs:label xml:lang="en">p</rdfs:label>
-    </rdfs:Datatype>
     
 
 
@@ -107,9 +85,9 @@
     
 
 
-    <!-- //##responsibleEntity -->
+    <!-- http://github.com/naiayti/teachingKGonto/responsibleEntity -->
 
-    <owl:ObjectProperty rdf:about="//##responsibleEntity">
+    <owl:ObjectProperty rdf:about="http://github.com/naiayti/teachingKGonto/responsibleEntity">
         <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topObjectProperty"/>
         <rdfs:domain rdf:resource="http://schema.org/Course"/>
         <rdfs:range rdf:resource="http://schema.org/EducationalOrganization"/>
@@ -265,9 +243,9 @@
     
 
 
-    <!-- http://webprotege.stanford.edu/RDbzR7lZYXAd5CHAVKV5btg -->
+    <!-- "http://github.com/naiayti/teachingKGonto/containsResource -->
 
-    <owl:ObjectProperty rdf:about="http://webprotege.stanford.edu/RDbzR7lZYXAd5CHAVKV5btg">
+    <owl:ObjectProperty rdf:about=""http://github.com/naiayti/teachingKGonto/containsResource">
         <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topObjectProperty"/>
         <rdfs:domain rdf:resource="http://github.com/naiayti/teachingKGonto/CourseSession"/>
         <rdfs:range rdf:resource="https://github.com/tibonto/educor#EducationalResource"/>
@@ -276,12 +254,12 @@
     
 
 
-    <!-- http://webprotege.stanford.edu/Rh4PX1h3lGeh6VI8JCioai -->
+    <!-- "http://github.com/naiayti/teachingKGonto/hasPractical -->
 
-    <owl:ObjectProperty rdf:about="http://webprotege.stanford.edu/Rh4PX1h3lGeh6VI8JCioai">
+    <owl:ObjectProperty rdf:about=""http://github.com/naiayti/teachingKGonto/hasPractical">
         <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topObjectProperty"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#EducationalResource"/>
-        <rdfs:range rdf:resource="http://webprotege.stanford.edu/RWFDCu93KkvY1yLE61w1M5"/>
+        <rdfs:range rdf:resource="http://github.com/naiayti/teachingKGonto/Practical"/>
         <rdfs:label xml:lang="en">hasPractical</rdfs:label>
     </owl:ObjectProperty>
     
@@ -331,9 +309,9 @@
     
 
 
-    <!-- //##mainTopic -->
+    <!-- http://github.com/naiayti/teachingKGonto/mainTopic -->
 
-    <owl:DatatypeProperty rdf:about="//##mainTopic">
+    <owl:DatatypeProperty rdf:about="http://github.com/naiayti/teachingKGonto/mainTopic">
         <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#KnowledgeTopic"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
@@ -343,9 +321,9 @@
     
 
 
-    <!-- //##theroreticalTopic -->
+    <!-- http://github.com/naiayti/teachingKGonto/theroreticalTopic -->
 
-    <owl:DatatypeProperty rdf:about="//##theroreticalTopic">
+    <owl:DatatypeProperty rdf:about="http://github.com/naiayti/teachingKGonto/stheroreticalTopic">
         <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#KnowledgeTopic"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
@@ -466,7 +444,7 @@
         <rdfs:domain rdf:resource="http://github.com/naiayti/teachingKGonto/CourseSession"/>
         <rdfs:domain rdf:resource="http://schema.org/EducationalOrganization"/>
         <rdfs:domain rdf:resource="http://schema.org/Person"/>
-        <rdfs:domain rdf:resource="http://webprotege.stanford.edu/RWFDCu93KkvY1yLE61w1M5"/>
+        <rdfs:domain rdf:resource="http://github.com/naiayti/teachingKGonto/Practical"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#EducationalResource"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#KnowledgeTopic"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#LearningOutcome"/>
@@ -506,7 +484,7 @@
         <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
         <rdfs:domain rdf:resource="http://schema.org/Course"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#Skill"/>
-        <rdfs:range rdf:resource="http://webprotege.stanford.edu/RBeKZtSQtnAcIOl3EP41tBy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#duration"/>
         <dc:description rdf:datatype="http://www.w3.org/2001/XMLSchema#string">How many weeks are needed to master a skill</dc:description>
         <rdfs:label xml:lang="en">timeRequired</rdfs:label>
     </owl:DatatypeProperty>
@@ -588,9 +566,9 @@
     
 
 
-    <!-- http://webprotege.stanford.edu/RWFDCu93KkvY1yLE61w1M5 -->
+    <!-- http://github.com/naiayti/teachingKGonto/Practical -->
 
-    <owl:Class rdf:about="http://webprotege.stanford.edu/RWFDCu93KkvY1yLE61w1M5">
+    <owl:Class rdf:about="http://github.com/naiayti/teachingKGonto/Practical">
         <rdfs:label xml:lang="en">Practical</rdfs:label>
     </owl:Class>
     
