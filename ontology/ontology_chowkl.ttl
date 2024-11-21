@@ -1,0 +1,153 @@
+@prefix educor: <https://github.com/tibonto/educor#> .
+@prefix mod: <https://w3id.org/mod#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix tch: <http://w3id.org/teaching#> .
+
+schema:CollegeOrUniversity a owl:Class ;
+    rdfs:label "College Or University" ;
+    rdfs:subClassOf schema:EducationalOrganization .
+
+schema:assesses a owl:ObjectProperty ;
+    rdfs:label "assesses" ;
+    rdfs:domain educor:Skill ;
+    rdfs:range educor:LearningOutcome .
+
+schema:author a owl:ObjectProperty ;
+    rdfs:label "author" ;
+    rdfs:domain educor:EducationalResource ;
+    rdfs:range schema:Person .
+
+schema:copyrightHolder a owl:ObjectProperty ;
+    rdfs:label "copyright holder" ;
+    rdfs:domain educor:EducationalResource ;
+    rdfs:range schema:EducationalOrganization,
+        schema:Person .
+
+schema:hasCourseInstance a owl:ObjectProperty ;
+    rdfs:label "has course instance" ;
+    rdfs:domain schema:Course ;
+    rdfs:range schema:CourseInstance .
+
+schema:instructor a owl:ObjectProperty ;
+    rdfs:label "instructor" ;
+    rdfs:domain tch:CourseSession ;
+    rdfs:range schema:Person .
+
+schema:isSimilarTo a owl:ObjectProperty ;
+    rdfs:label "is similar to" ;
+    rdfs:domain educor:EducationalResource ;
+    rdfs:range educor:EducationalResource .
+
+schema:memberOf a owl:ObjectProperty ;
+    rdfs:label "member of" ;
+    rdfs:domain schema:Person ;
+    rdfs:range schema:EducationalOrganization .
+
+schema:provider a owl:ObjectProperty ;
+    rdfs:label "provider" ;
+    rdfs:domain schema:Course ;
+    rdfs:range schema:EducationalOrganization,
+        schema:Person .
+
+schema:teaches a owl:ObjectProperty ;
+    rdfs:label "teaches" ;
+    rdfs:domain schema:Course,
+        educor:Skill ;
+    rdfs:range educor:KnowledgeTopic .
+
+tch: a owl:Ontology ;
+    mod:createdWith <https://chowlk.linkeddata.es/> .
+
+tch:Lecturer a owl:Class ;
+    rdfs:label "Lecturer" ;
+    rdfs:subClassOf schema:Person .
+
+tch:competencyRequired a owl:ObjectProperty ;
+    rdfs:label "competency required" ;
+    rdfs:domain educor:Skill ;
+    rdfs:range educor:KnowledgeTopic,
+        educor:Skill .
+
+tch:containsResource a owl:ObjectProperty ;
+    rdfs:label "contains resource" ;
+    rdfs:domain tch:CourseSession ;
+    rdfs:range educor:EducationalResource .
+
+tch:coursePrerequisites a owl:ObjectProperty ;
+    rdfs:label "course prerequisites" ;
+    rdfs:domain schema:Course ;
+    rdfs:range educor:KnowledgeTopic,
+        educor:LearningOutcome,
+        educor:Skill .
+
+tch:decentralisationAspect a owl:ObjectProperty ;
+    rdfs:label "decentralisation aspect" ;
+    rdfs:domain educor:Skill ;
+    rdfs:range educor:LearningOutcome,
+        educor:Skill .
+
+tch:hasPractical a owl:ObjectProperty ;
+    rdfs:label "has practical" ;
+    rdfs:domain educor:EducationalResource ;
+    rdfs:range tch:Practical .
+
+tch:responsibleEntity a owl:ObjectProperty ;
+    rdfs:label "responsible entity" ;
+    rdfs:domain schema:Course ;
+    rdfs:range schema:EducationalOrganization,
+        schema:Person .
+
+educor:consistsOfKnowledge a owl:ObjectProperty ;
+    rdfs:label "consists of knowledge" ;
+    rdfs:domain educor:LearningPath ;
+    rdfs:range educor:KnowledgeTopic .
+
+educor:hasTheory a owl:ObjectProperty ;
+    rdfs:label "has theory" ;
+    rdfs:domain educor:EducationalResource ;
+    rdfs:range educor:Theory .
+
+educor:requiresKnowledge a owl:ObjectProperty ;
+    rdfs:label "requires knowledge" ;
+    rdfs:domain educor:Skill ;
+    rdfs:range educor:KnowledgeTopic .
+
+schema:CourseInstance a owl:Class ;
+    rdfs:label "Course Instance" .
+
+tch:Practical a owl:Class ;
+    rdfs:label "Practical" .
+
+educor:Theory a owl:Class ;
+    rdfs:label "Theory" .
+
+tch:CourseSession a owl:Class ;
+    rdfs:label "Course Session" .
+
+educor:LearningPath a owl:Class ;
+    rdfs:label "Learning Path" .
+
+educor:LearningOutcome a owl:Class ;
+    rdfs:label "Learning Outcome" .
+
+schema:Course a owl:Class ;
+    rdfs:label "Course" ;
+    rdfs:subClassOf educor:LearningPath .
+
+schema:EducationalOrganization a owl:Class ;
+    rdfs:label "Educational Organization" .
+
+educor:KnowledgeTopic a owl:Class ;
+    rdfs:label "Knowledge Topic" .
+
+schema:Person a owl:Class ;
+    rdfs:label "Person" .
+
+educor:EducationalResource a owl:Class ;
+    rdfs:label "Educational Resource" .
+
+educor:Skill a owl:Class ;
+    rdfs:label "Skill" .
+
