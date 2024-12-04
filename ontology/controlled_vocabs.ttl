@@ -27,6 +27,11 @@ edutype:theory a skos:Concept;
  	skos:notation "theory"; 
  	skos:prefLabel "theory" .
 
+edutype:mix a skos:Concept; 
+ 	skos:inScheme <https://w3id.org/coursesonto/kos/educational-type>; 
+ 	skos:notation "mix"; 
+ 	skos:prefLabel "mix" .
+
 edutype:practice a skos:Concept; 
  	skos:inScheme <https://w3id.org/coursesonto/kos/educational-type>; 
  	skos:notation "practice"; 
