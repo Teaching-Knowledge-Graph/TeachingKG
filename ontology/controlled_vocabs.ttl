@@ -14,7 +14,7 @@
 
 <https://w3id.org/coursesonto/kos/educational-type> a skos:ConceptScheme; 
 	skos:definition "Type of educational resources"; 
- 	skos:hasTopConcept edutype:theory, edutype:practice; 
+ 	skos:hasTopConcept edutype:theory, edutype:practice, edutype:mix; 
 	skos:notation "resource_type";
 	skos:prefLabel "Type of educational resources" ;
     dc:title "Types of educational resources" ;
