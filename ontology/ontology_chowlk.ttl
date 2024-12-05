@@ -176,12 +176,6 @@ courses:coursePrerequisites a owl:ObjectProperty ;
         educor:LearningOutcome,
         educor:Skill .
 
-courses:decentralisationAspect a owl:ObjectProperty ;
-    rdfs:label "decentralisation aspect" ;
-    rdfs:domain educor:Skill ;
-    rdfs:range educor:LearningOutcome,
-        educor:Skill .
-
 courses:hasType a owl:ObjectProperty ;
     rdfs:label "has type" ;
     rdfs:domain educor:EducationalResource;
