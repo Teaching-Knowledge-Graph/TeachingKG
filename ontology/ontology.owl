@@ -97,18 +97,6 @@
     
 
 
-    <!-- http://github.com/naiayti/teachingKGonto/decentralisationAspect -->
-
-    <owl:ObjectProperty rdf:about="http://github.com/naiayti/teachingKGonto/decentralisationAspect">
-        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topObjectProperty"/>
-        <rdfs:domain rdf:resource="https://github.com/tibonto/educor#Skill"/>
-        <rdfs:range rdf:resource="https://github.com/tibonto/educor#LearningOutcome"/>
-        <rdfs:range rdf:resource="https://github.com/tibonto/educor#Skill"/>
-        <rdfs:label xml:lang="en">decentralisationAspect</rdfs:label>
-    </owl:ObjectProperty>
-    
-
-
     <!-- http://schema.org/assesses -->
 
     <owl:ObjectProperty rdf:about="http://schema.org/assesses">
