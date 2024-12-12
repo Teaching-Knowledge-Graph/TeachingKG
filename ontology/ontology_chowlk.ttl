@@ -191,9 +191,14 @@ courses:hasType a owl:ObjectProperty ;
    )
   ] ; .
 
-courses:mainTopic a owl:DatatypeProperty ;
-    rdfs:label "main topic" ;
-    rdfs:domain educor:KnowledgeTopic ;
+courses:mainSkill a owl:DatatypeProperty ;
+    rdfs:label "main skill" ;
+    rdfs:domain educor:Skill ;
+    rdfs:range xsd:boolean .
+
+courses:coreResource a owl:DatatypeProperty ;
+    rdfs:label "core educational resource" ;
+    rdfs:domain educor:EducationalResource ;
     rdfs:range xsd:boolean .
 
 courses:responsibleEntity a owl:ObjectProperty ;
