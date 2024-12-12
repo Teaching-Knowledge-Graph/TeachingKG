@@ -285,14 +285,25 @@
     
 
 
-    <!-- http://github.com/naiayti/teachingKGonto/mainTopic -->
+    <!-- http://github.com/naiayti/teachingKGonto/mainSkil -->
 
-    <owl:DatatypeProperty rdf:about="http://github.com/naiayti/teachingKGonto/mainTopic">
+    <owl:DatatypeProperty rdf:about="http://github.com/naiayti/teachingKGonto/mainSkill">
         <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
-        <rdfs:domain rdf:resource="https://github.com/tibonto/educor#KnowledgeTopic"/>
+        <rdfs:domain rdf:resource="https://github.com/tibonto/educor#Skill"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
-        <rdfs:label xml:lang="en">mainTopic</rdfs:label>
-        <skos:definition xml:lang="en">It separates the main/core topics from the secondary ones. True if the KnowledgeTopic is main, False otherwise.</skos:definition>
+        <rdfs:label xml:lang="en">mainSkill</rdfs:label>
+        <skos:definition xml:lang="en">It separates the main/core skills from the secondary ones. True if the Skill is main, False otherwise.</skos:definition>
+    </owl:DatatypeProperty>
+
+
+    <!-- http://github.com/naiayti/teachingKGonto/coreResource -->
+
+    <owl:DatatypeProperty rdf:about="http://github.com/naiayti/teachingKGonto/coreResource">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:domain rdf:resource="https://github.com/tibonto/educor#EducationalResource"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+        <rdfs:label xml:lang="en">coreResource</rdfs:label>
+        <skos:definition xml:lang="en">It separates the primary/core educational resources from the additional/suplementary ones. True if the EducationalResource is core, False if it is suplementary.</skos:definition>
     </owl:DatatypeProperty>
     
 
