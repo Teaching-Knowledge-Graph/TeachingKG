@@ -138,6 +138,8 @@ schema:url a owl:DatatypeProperty ;
     rdfs:label "url" ;
     rdfs:domain schema:Course,
         schema:EducationalOrganization,
+        educor:Skill,
+        educor:EducationalResource,
         schema:Person ;
     rdfs:range xsd:anyURI .
 
