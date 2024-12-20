@@ -103,6 +103,7 @@ schema:name a owl:DatatypeProperty ;
         educor:EducationalResource,
         educor:KnowledgeTopic,
         educor:LearningOutcome,
+        educor:Skill,
         courses:CourseSession ;
     rdfs:range xsd:string .
 
