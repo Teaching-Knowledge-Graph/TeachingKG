@@ -431,6 +431,7 @@
         <rdfs:domain rdf:resource="http://github.com/naiayti/teachingKGonto/CourseSession"/>
         <rdfs:domain rdf:resource="http://schema.org/EducationalOrganization"/>
         <rdfs:domain rdf:resource="http://schema.org/Person"/>
+        <rdfs:domain rdf:resource="https://github.com/tibonto/educor#Skill"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#EducationalResource"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#KnowledgeTopic"/>
         <rdfs:domain rdf:resource="https://github.com/tibonto/educor#LearningOutcome"/>
