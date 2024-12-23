@@ -33,22 +33,57 @@ schema:author a owl:ObjectProperty ;
 
 schema:copyrightHolder a owl:ObjectProperty ;
     rdfs:label "copyright holder" ;
-    rdfs:domain educor:EducationalResource ;
-    rdfs:range schema:EducationalOrganization,
-        schema:Person .
+    rdfs:domain educor:EducationalResource .
+
+educor:EducationalResource rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:copyrightHolder ;
+    owl:someValuesFrom schema:EducationalOrganization
+], [
+    a owl:Restriction ;
+    owl:onProperty schema:copyrightHolder ;
+    owl:someValuesFrom schema:Person
+] .
+
 
 schema:description a owl:DatatypeProperty ;
     rdfs:label "description" ;
-    rdfs:domain schema:Course,
-        educor:LearningOutcome ;
     rdfs:range rdf:langString .
+
+schema:Course rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:description ;
+    owl:someValuesFrom rdf:langString
+] .
+
+educor:LearningOutcome rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:description ;
+    owl:someValuesFrom rdf:langString
+] .
+
 
 schema:educationalLevel a owl:DatatypeProperty ;
     rdfs:label "educational level" ;
-    rdfs:domain schema:Course,
-        educor:KnowledgeTopic,
-        educor:Skill ;
     rdfs:range xsd:string .
+
+schema:Course rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:educationalLevel ;
+    owl:someValuesFrom xsd:string
+] .
+
+educor:KnowledgeTopic rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:educationalLevel ;
+    owl:someValuesFrom xsd:string
+] .
+
+educor:Skill rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:educationalLevel ;
+    owl:someValuesFrom xsd:string
+] .
 
 schema:email a owl:DatatypeProperty ;
     rdfs:label "email" ;
@@ -97,21 +132,69 @@ schema:memberOf a owl:ObjectProperty ;
 
 schema:name a owl:DatatypeProperty ;
     rdfs:label "name" ;
-    rdfs:domain schema:Course,
-        schema:EducationalOrganization,
-        schema:Person,
-        educor:EducationalResource,
-        educor:KnowledgeTopic,
-        educor:LearningOutcome,
-        educor:Skill,
-        courses:CourseSession ;
     rdfs:range xsd:string .
+
+schema:Course rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:name ;
+    owl:someValuesFrom xsd:string
+] .
+
+schema:EducationalOrganization rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:name ;
+    owl:someValuesFrom xsd:string
+] .
+
+schema:Person rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:name ;
+    owl:someValuesFrom xsd:string
+] .
+
+educor:EducationalResource rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:name ;
+    owl:someValuesFrom xsd:string
+] .
+
+educor:KnowledgeTopic rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:name ;
+    owl:someValuesFrom xsd:string
+] .
+
+educor:LearningOutcome rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:name ;
+    owl:someValuesFrom xsd:string
+] .
+
+educor:Skill rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:name ;
+    owl:someValuesFrom xsd:string
+] .
+
+courses:CourseSession rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:name ;
+    owl:someValuesFrom xsd:string
+] .
 
 schema:provider a owl:ObjectProperty ;
     rdfs:label "provider" ;
-    rdfs:domain schema:Course ;
-    rdfs:range schema:EducationalOrganization,
-        schema:Person .
+    rdfs:domain schema:Course .
+
+schema:Course rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:provider ;
+    owl:someValuesFrom schema:EducationalOrganization
+], [
+    a owl:Restriction ;
+    owl:onProperty schema:provider ;
+    owl:someValuesFrom schema:Person
+] .
 
 schema:requirements a owl:DatatypeProperty ;
     rdfs:label "requirements" ;
@@ -125,24 +208,69 @@ schema:seeAlso a owl:DatatypeProperty ;
 
 schema:teaches a owl:ObjectProperty ;
     rdfs:label "teaches" ;
-    rdfs:domain schema:Course,
-        educor:Skill ;
     rdfs:range educor:KnowledgeTopic .
+
+schema:Course rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:teaches ;
+    owl:someValuesFrom educor:KnowledgeTopic
+] .
+
+educor:Skill rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:teaches ;
+    owl:someValuesFrom educor:KnowledgeTopic
+] .
 
 schema:timeRequired a owl:DatatypeProperty ;
     rdfs:label "time required" ;
-    rdfs:domain schema:Course,
-        educor:Skill ;
     rdfs:range xsd:duration .
+
+schema:Course rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:timeRequired ;
+    owl:someValuesFrom xsd:duration
+] .
+
+educor:Skill rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:timeRequired ;
+    owl:someValuesFrom xsd:duration
+] .
 
 schema:url a owl:DatatypeProperty ;
     rdfs:label "url" ;
-    rdfs:domain schema:Course,
-        schema:EducationalOrganization,
-        educor:Skill,
-        educor:EducationalResource,
-        schema:Person ;
     rdfs:range xsd:anyURI .
+
+schema:Course rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:url ;
+    owl:someValuesFrom xsd:anyURI
+] .
+
+schema:EducationalOrganization rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:url ;
+    owl:someValuesFrom xsd:anyURI
+] .
+
+educor:Skill rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:url ;
+    owl:someValuesFrom xsd:anyURI
+] .
+
+educor:EducationalResource rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:url ;
+    owl:someValuesFrom xsd:anyURI
+] .
+
+schema:Person rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty schema:url ;
+    owl:someValuesFrom xsd:anyURI
+] .
 
 educor:consistsOfKnowledge a owl:ObjectProperty ;
     rdfs:label "consists of knowledge" ;
@@ -174,10 +302,22 @@ courses:containsResource a owl:ObjectProperty ;
 
 courses:coursePrerequisites a owl:ObjectProperty ;
     rdfs:label "course prerequisites" ;
-    rdfs:domain schema:Course ;
-    rdfs:range educor:KnowledgeTopic,
-        educor:LearningOutcome,
-        educor:Skill .
+    rdfs:domain schema:Course .
+
+schema:Course rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty courses:coursePrerequisites ;
+    owl:someValuesFrom educor:KnowledgeTopic
+], [
+    a owl:Restriction ;
+    owl:onProperty courses:coursePrerequisites ;
+    owl:someValuesFrom educor:LearningOutcome
+], [
+    a owl:Restriction ;
+    owl:onProperty courses:coursePrerequisites ;
+    owl:someValuesFrom educor:Skill
+] .
+
 
 courses:hasType a owl:ObjectProperty ;
     rdfs:label "has type" ;
@@ -206,9 +346,17 @@ courses:coreResource a owl:DatatypeProperty ;
 
 courses:responsibleEntity a owl:ObjectProperty ;
     rdfs:label "responsible entity" ;
-    rdfs:domain schema:Course ;
-    rdfs:range schema:EducationalOrganization,
-        schema:Person .
+    rdfs:domain schema:Course .
+
+schema:Course rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty courses:responsibleEntity ;
+    owl:someValuesFrom schema:EducationalOrganization
+], [
+    a owl:Restriction ;
+    owl:onProperty courses:responsibleEntity ;
+    owl:someValuesFrom schema:Person
+] .
 
 courses:theoreticalTopic a owl:DatatypeProperty ;
     rdfs:label "theoretical topic" ;
