@@ -1,0 +1,79 @@
+{
+  "@context" : {
+    "referenceFormulation" : {
+      "@id" : "http://semweb.mmlab.be/ns/rml#referenceFormulation"
+    },
+    "subjectMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#subjectMap"
+    },
+    "TriplesMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#TriplesMap"
+    },
+    "objectMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#objectMap"
+    },
+    "Dataset" : {
+      "@id" : "http://rdfs.org/ns/void#Dataset"
+    },
+    "predicateObjectMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#predicateObjectMap"
+    },
+    "predicateMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#predicateMap"
+    },
+    "LogicalSource" : {
+      "@id" : "http://semweb.mmlab.be/ns/rml#LogicalSource"
+    },
+    "constant" : {
+      "@id" : "http://www.w3.org/ns/r2rml#constant"
+    },
+    "child" : {
+      "@id" : "http://www.w3.org/ns/r2rml#child"
+    },
+    "joinCondition" : {
+      "@id" : "http://www.w3.org/ns/r2rml#joinCondition"
+    },
+    "label" : {
+      "@id" : "http://www.w3.org/2000/01/rdf-schema#label"
+    },
+    "parent" : {
+      "@id" : "http://www.w3.org/ns/r2rml#parent"
+    },
+    "SubjectMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#SubjectMap"
+    },
+    "termType" : {
+      "@id" : "http://www.w3.org/ns/r2rml#termType"
+    },
+    "ObjectMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#ObjectMap"
+    },
+    "reference" : {
+      "@id" : "http://semweb.mmlab.be/ns/rml#reference"
+    },
+    "source" : {
+      "@id" : "http://semweb.mmlab.be/ns/rml#source"
+    },
+    "exampleResource" : {
+      "@id" : "http://rdfs.org/ns/void#exampleResource"
+    },
+    "template" : {
+      "@id" : "http://www.w3.org/ns/r2rml#template"
+    },
+    "datatype" : {
+      "@id" : "http://www.w3.org/ns/r2rml#datatype"
+    },
+    "PredicateMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#PredicateMap"
+    },
+    "PredicateObjectMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#PredicateObjectMap"
+    },
+    "logicalSource" : {
+      "@id" : "http://semweb.mmlab.be/ns/rml#logicalSource"
+    },
+    "parentTriplesMap" : {
+      "@id" : "http://www.w3.org/ns/r2rml#parentTriplesMap"
+    }
+  }
+}
