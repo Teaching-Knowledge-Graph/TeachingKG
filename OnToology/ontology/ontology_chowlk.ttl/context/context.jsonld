@@ -1,0 +1,181 @@
+{
+  "@context" : {
+    "teaches" : {
+      "@id" : "http://schema.org/teaches",
+      "@type" : "@id"
+    },
+    "coreResource" : {
+      "@id" : "https://w3id.org/coursesonto#coreResource",
+      "@type" : "http://www.w3.org/2001/XMLSchema#boolean"
+    },
+    "containsResource" : {
+      "@id" : "https://w3id.org/coursesonto#containsResource",
+      "@type" : "@id"
+    },
+    "CourseInstance" : {
+      "@id" : "http://schema.org/CourseInstance"
+    },
+    "Lecturer" : {
+      "@id" : "https://w3id.org/coursesonto#Lecturer"
+    },
+    "license" : {
+      "@id" : "http://schema.org/license"
+    },
+    "requiresKnowledge" : {
+      "@id" : "https://github.com/tibonto/educor#requiresKnowledge",
+      "@type" : "@id"
+    },
+    "url" : {
+      "@id" : "http://schema.org/url",
+      "@type" : "http://www.w3.org/2001/XMLSchema#anyURI"
+    },
+    "isSimilarTo" : {
+      "@id" : "http://schema.org/isSimilarTo",
+      "@type" : "@id"
+    },
+    "LearningOutcome" : {
+      "@id" : "https://github.com/tibonto/educor#LearningOutcome"
+    },
+    "requirements" : {
+      "@id" : "http://schema.org/requirements"
+    },
+    "Course" : {
+      "@id" : "http://schema.org/Course"
+    },
+    "label" : {
+      "@id" : "http://www.w3.org/2000/01/rdf-schema#label"
+    },
+    "author" : {
+      "@id" : "http://schema.org/author",
+      "@type" : "@id"
+    },
+    "Concept" : {
+      "@id" : "http://www.w3.org/2004/02/skos/core#Concept"
+    },
+    "about" : {
+      "@id" : "http://schema.org/about"
+    },
+    "LearningPath" : {
+      "@id" : "https://github.com/tibonto/educor#LearningPath"
+    },
+    "gender" : {
+      "@id" : "http://schema.org/gender",
+      "@type" : "http://www.w3.org/2001/XMLSchema#short"
+    },
+    "email" : {
+      "@id" : "http://schema.org/email",
+      "@type" : "http://www.w3.org/2001/XMLSchema#string"
+    },
+    "Person" : {
+      "@id" : "http://schema.org/Person"
+    },
+    "provider" : {
+      "@id" : "http://schema.org/provider",
+      "@type" : "@id"
+    },
+    "hasType" : {
+      "@id" : "https://w3id.org/coursesonto#hasType",
+      "@type" : "@id"
+    },
+    "langString" : {
+      "@id" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+    },
+    "name" : {
+      "@id" : "http://schema.org/name",
+      "@type" : "http://www.w3.org/2001/XMLSchema#string"
+    },
+    "EducationalOrganization" : {
+      "@id" : "http://schema.org/EducationalOrganization"
+    },
+    "timeRequired" : {
+      "@id" : "http://schema.org/timeRequired",
+      "@type" : "http://www.w3.org/2001/XMLSchema#duration"
+    },
+    "copyrightHolder" : {
+      "@id" : "http://schema.org/copyrightHolder",
+      "@type" : "@id"
+    },
+    "location" : {
+      "@id" : "http://schema.org/location"
+    },
+    "instructor" : {
+      "@id" : "http://schema.org/instructor",
+      "@type" : "@id"
+    },
+    "CourseSession" : {
+      "@id" : "https://w3id.org/coursesonto#CourseSession"
+    },
+    "createdWith" : {
+      "@id" : "https://w3id.org/mod#createdWith"
+    },
+    "coursePrerequisites" : {
+      "@id" : "https://w3id.org/coursesonto#coursePrerequisites",
+      "@type" : "@id"
+    },
+    "competencyRequired" : {
+      "@id" : "https://w3id.org/coursesonto#competencyRequired",
+      "@type" : "@id"
+    },
+    "theoreticalTopic" : {
+      "@id" : "https://w3id.org/coursesonto#theoreticalTopic",
+      "@type" : "http://www.w3.org/2001/XMLSchema#boolean"
+    },
+    "hasCourseInstance" : {
+      "@id" : "http://schema.org/hasCourseInstance",
+      "@type" : "@id"
+    },
+    "CollegeOrUniversity" : {
+      "@id" : "http://schema.org/CollegeOrUniversity"
+    },
+    "responsibleEntity" : {
+      "@id" : "https://w3id.org/coursesonto#responsibleEntity",
+      "@type" : "@id"
+    },
+    "Skill" : {
+      "@id" : "https://github.com/tibonto/educor#Skill"
+    },
+    "KnowledgeTopic" : {
+      "@id" : "https://github.com/tibonto/educor#KnowledgeTopic"
+    },
+    "seeAlso" : {
+      "@id" : "http://schema.org/seeAlso"
+    },
+    "consistsOfKnowledge" : {
+      "@id" : "https://github.com/tibonto/educor#consistsOfKnowledge",
+      "@type" : "@id"
+    },
+    "mainSkill" : {
+      "@id" : "https://w3id.org/coursesonto#mainSkill",
+      "@type" : "http://www.w3.org/2001/XMLSchema#boolean"
+    },
+    "audience" : {
+      "@id" : "http://schema.org/audience"
+    },
+    "memberOf" : {
+      "@id" : "http://schema.org/memberOf",
+      "@type" : "@id"
+    },
+    "educationalLevel" : {
+      "@id" : "http://schema.org/educationalLevel",
+      "@type" : "http://www.w3.org/2001/XMLSchema#string"
+    },
+    "isAccessibleForFree" : {
+      "@id" : "http://schema.org/isAccessibleForFree",
+      "@type" : "http://www.w3.org/2001/XMLSchema#boolean"
+    },
+    "inScheme" : {
+      "@id" : "http://www.w3.org/2004/02/skos/core#inScheme",
+      "@type" : "@id"
+    },
+    "description" : {
+      "@id" : "http://schema.org/description"
+    },
+    "assesses" : {
+      "@id" : "http://schema.org/assesses",
+      "@type" : "@id"
+    },
+    "EducationalResource" : {
+      "@id" : "https://github.com/tibonto/educor#EducationalResource"
+    }
+  }
+}
