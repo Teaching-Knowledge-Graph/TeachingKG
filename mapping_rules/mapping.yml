@@ -1,0 +1,217 @@
+prefixes:
+  brick: https://brickschema.org/schema/Brick#
+  csvw: http://www.w3.org/ns/csvw#
+  dc: http://purl.org/dc/elements/1.1/
+  dcat: http://www.w3.org/ns/dcat#
+  dcmitype: http://purl.org/dc/dcmitype/
+  dcterms: http://purl.org/dc/terms/
+  dcam: http://purl.org/dc/dcam/
+  doap: http://usefulinc.com/ns/doap#
+  foaf: http://xmlns.com/foaf/0.1/
+  geo: http://www.opengis.net/ont/geosparql#
+  odrl: http://www.w3.org/ns/odrl/2/
+  org: http://www.w3.org/ns/org#
+  prof: http://www.w3.org/ns/dx/prof/
+  prov: http://www.w3.org/ns/prov#
+  qb: http://purl.org/linked-data/cube#
+  schema: https://schema.org/
+  sh: http://www.w3.org/ns/shacl#
+  skos: http://www.w3.org/2004/02/skos/core#
+  sosa: http://www.w3.org/ns/sosa/
+  ssn: http://www.w3.org/ns/ssn/
+  time: http://www.w3.org/2006/time#
+  vann: http://purl.org/vocab/vann/
+  void: http://rdfs.org/ns/void#
+  wgs: https://www.w3.org/2003/01/geo/wgs84_pos#
+  owl: http://www.w3.org/2002/07/owl#
+  rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  xsd: http://www.w3.org/2001/XMLSchema#
+  xml: http://www.w3.org/XML/1998/namespace
+  rr: http://www.w3.org/ns/r2rml#
+  fnml: http://semweb.mmlab.be/ns/fnml#
+  fno: https://w3id.org/function/ontology#
+  d2rq: http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#
+  rml: http://semweb.mmlab.be/ns/rml#
+  ql: http://semweb.mmlab.be/ns/ql#
+  courses: https://w3id.org/def/courses#
+  educor: https://github.com/tibonto/educor#
+
+mappings:
+  map_educational_organization_000:
+    sources:
+    - [kg_resources.csv~csv]
+    s: http://example.org/resource/educational_organization/$(Affiliation)
+    po:
+    - [rdf:type, schema:EducationalOrganization]
+    - [rdf:type, schema:CollegeOrUniversity]
+    - [schema:location, $(Country)]
+    - [schema:name, $(Affiliation)]
+  map_person_000:
+    sources:
+    - [kg_resources.csv~csv]
+    s: http://example.org/resource/person/$(name)
+    po:
+    - [rdf:type, schema:Person]
+    - [rdf:type, courses:Lecturer]
+    - [schema:email, $(email)]
+    - [schema:gender, $(gender)]
+    - [schema:name, $(name)]
+    - p: schema:memberOf
+      o:
+        mapping: map_educational_organization_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(Affiliation)]
+          - [str2, $(Affiliation)]
+  map_skill_000:
+    sources:
+    - [kg_topics.csv~csv]
+    s: http://example.org/resource/skill/$(skill)
+    po:
+    - [rdf:type, educor:Skill]
+    - [schema:educationalLevel, $(educationalLevel)]
+    - p: schema:assesses
+      o:
+        mapping: map_learning_outcome_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(assesses)]
+          - [str2, $(assesses)]
+    - p: schema:teaches
+      o:
+        mapping: map_knowledge_topic_2_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(teaches_true)]
+          - [str2, $(teaches_true)]
+    - p: schema:teaches
+      o:
+        mapping: map_knowledge_topic_3_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(teaches_false)]
+          - [str2, $(teaches_false)]
+    - p: educor:requiresKnowledge
+      o:
+        mapping: map_knowledge_topic_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(requiresKnowledge)]
+          - [str2, $(requiresKnowledge)]
+    - p: courses:competencyRequired
+      o:
+        mapping: map_competency_required_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(competencyRequired)]
+          - [str2, $(competencyRequired)]
+  map_learning_outcome_000:
+    sources:
+    - [kg_topics.csv~csv]
+    s: http://example.org/resource/learning_outcome/$(assesses)
+    po:
+    - [rdf:type, educor:LearningOutcome]
+    - [schema:description, $(assesses)]
+    - [schema:name, $(assesses)]
+  map_course_000:
+    sources:
+    - [kg_resources.csv~csv]
+    s: http://example.org/resource/course/$(title)
+    po:
+    - [rdf:type, schema:Course]
+    - [schema:name, $(title)]
+    - [schema:url, $(url)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week1)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week2)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week3)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week4)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week5)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week6)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week7)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week8)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week9)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week10)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week11)]
+    - [schema:teaches, http://example.org/resource/knowledge_topic/$(week12)]
+    - p: schema:provider
+      o:
+        mapping: map_educational_organization_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(Affiliation)]
+          - [str2, $(Affiliation)]
+    - p: schema:provider
+      o:
+        mapping: map_person_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(email)]
+          - [str2, $(email)]
+    - p: courses:responsibleEntity
+      o:
+        mapping: map_educational_organization_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(Affiliation)]
+          - [str2, $(Affiliation)]
+    - p: courses:responsibleEntity
+      o:
+        mapping: map_person_000
+        condition:
+          function: equal
+          parameters:
+          - [str1, $(email)]
+          - [str2, $(email)]
+  map_knowledge_topic_000:
+    sources:
+    - [kg_topics.csv~csv]
+    s: http://example.org/resource/knowledge_topic/$(requiresKnowledge)
+    po:
+    - [rdf:type, educor:KnowledgeTopic]
+    - [schema:educationalLevel, $(educationalLevel)]
+    - [schema:name, $(requiresKnowledge)]
+    - [courses:mainTopic, $(mainSkill), xsd:boolean]
+  map_competency_required_000:
+    sources:
+    - [kg_topics.csv~csv]
+    s: http://example.org/resource/competency_required/$(competencyRequired)
+    po:
+    - [rdf:type, educor:KnowledgeTopic]
+    - [schema:educationalLevel, $(educationalLevel)]
+    - [schema:name, $(competencyRequired)]
+  map_knowledge_topic_2_000:
+    sources:
+    - [kg_topics.csv~csv]
+    s: http://example.org/resource/knowledge_topic/$(teaches_true)
+    po:
+    - [rdf:type, educor:KnowledgeTopic]
+    - [schema:educationalLevel, $(educationalLevel)]
+    - [schema:name, $(teaches_true)]
+    - [courses:theoreticalTopic, $(true), xsd:boolean]
+  map_knowledge_topic_3_000:
+    sources:
+    - [kg_topics.csv~csv]
+    s: http://example.org/resource/knowledge_topic/$(teaches_false)
+    po:
+    - [rdf:type, educor:KnowledgeTopic]
+    - [schema:educationalLevel, $(educationalLevel)]
+    - [schema:name, $(teaches_false)]
+    - [courses:theoreticalTopic, $(false), xsd:boolean]
+  map_knowledge_topic_resources_000:
+    sources:
+    - [kg_resources2.csv~csv]
+    s: http://example.org/resource/knowledge_topic/$(knowledge_topics)
+    po:
+    - [rdf:type, educor:KnowledgeTopic]
+    - [schema:name, $(knowledge_topics)]
+
