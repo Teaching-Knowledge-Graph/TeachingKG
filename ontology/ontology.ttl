@@ -1,0 +1,498 @@
+@prefix : <https://w3id.org/def/courses#> .
+@prefix mod: <https://w3id.org/mod#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix educor: <https://github.com/tibonto/educor#> .
+@prefix schema: <http://schema.org/> .
+@prefix courses: <https://w3id.org/def/courses#> .
+@base <https://w3id.org/def/courses#> .
+
+<https://w3id.org/def/courses#> rdf:type owl:Ontology ;
+                                 <http://purl.org/dc/elements/1.1/creator> "David Chaves-Fraga" ,
+                                                                           "Eleni Ilkou" ,
+                                                                           "Ernesto Jimenez-Ruiz" ,
+                                                                           "Hasan Abu-Rasheed" ,
+                                                                           "The Courses Ontology for Teaching" ;
+                                 <http://purl.org/dc/elements/1.1/title> "Courses Ontology" ;
+                                 <http://purl.org/dc/terms/license> "https://creativecommons.org/licenses/by/4.0" ;
+                                 owl:versionInfo "v1.0" ;
+                                 mod:createdWith <https://chowlk.linkeddata.es/> .
+
+#################################################################
+#    Annotation properties
+#################################################################
+
+###  http://purl.org/dc/elements/1.1/creator
+<http://purl.org/dc/elements/1.1/creator> rdf:type owl:AnnotationProperty .
+
+
+###  http://purl.org/dc/elements/1.1/title
+<http://purl.org/dc/elements/1.1/title> rdf:type owl:AnnotationProperty .
+
+
+###  http://purl.org/dc/terms/license
+<http://purl.org/dc/terms/license> rdf:type owl:AnnotationProperty .
+
+
+###  https://w3id.org/mod#createdWith
+mod:createdWith rdf:type owl:AnnotationProperty .
+
+
+#################################################################
+#    Datatypes
+#################################################################
+
+###  http://www.w3.org/2001/XMLSchema#duration
+xsd:duration rdf:type rdfs:Datatype .
+
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://schema.org/assesses
+schema:assesses rdf:type owl:ObjectProperty ;
+                rdfs:domain educor:Skill ;
+                rdfs:range educor:LearningOutcome ;
+                rdfs:label "assesses" .
+
+
+###  http://schema.org/author
+schema:author rdf:type owl:ObjectProperty ;
+              rdfs:domain educor:EducationalResource ;
+              rdfs:range schema:Person ;
+              rdfs:label "author" .
+
+
+###  http://schema.org/copyrightHolder
+schema:copyrightHolder rdf:type owl:ObjectProperty ;
+                       rdfs:domain educor:EducationalResource ;
+                       rdfs:label "copyright holder" .
+
+
+###  http://schema.org/hasCourseInstance
+schema:hasCourseInstance rdf:type owl:ObjectProperty ;
+                         rdfs:domain schema:Course ;
+                         rdfs:range courses:CourseSession ;
+                         rdfs:label "has course instance" .
+
+
+###  http://schema.org/instructor
+schema:instructor rdf:type owl:ObjectProperty ;
+                  rdfs:domain courses:CourseSession ;
+                  rdfs:range schema:Person ;
+                  rdfs:label "instructor" .
+
+
+###  http://schema.org/isSimilarTo
+schema:isSimilarTo rdf:type owl:ObjectProperty ;
+                   rdfs:domain educor:EducationalResource ;
+                   rdfs:range educor:EducationalResource ;
+                   rdfs:label "is similar to" .
+
+
+###  http://schema.org/memberOf
+schema:memberOf rdf:type owl:ObjectProperty ;
+                rdfs:domain schema:Person ;
+                rdfs:range schema:EducationalOrganization ;
+                rdfs:label "member of" .
+
+
+###  http://schema.org/provider
+schema:provider rdf:type owl:ObjectProperty ;
+                rdfs:domain schema:Course ;
+                rdfs:label "provider" .
+
+
+###  http://schema.org/teaches
+schema:teaches rdf:type owl:ObjectProperty ;
+               rdfs:range educor:KnowledgeTopic ;
+               rdfs:label "teaches" .
+
+
+###  http://www.w3.org/2004/02/skos/core#inScheme
+skos:inScheme rdf:type owl:ObjectProperty .
+
+
+###  https://github.com/tibonto/educor#consistsOfKnowledge
+educor:consistsOfKnowledge rdf:type owl:ObjectProperty ;
+                           rdfs:domain educor:LearningPath ;
+                           rdfs:range educor:KnowledgeTopic ;
+                           rdfs:label "consists of knowledge" .
+
+
+###  https://github.com/tibonto/educor#requiresKnowledge
+educor:requiresKnowledge rdf:type owl:ObjectProperty ;
+                         rdfs:domain educor:Skill ;
+                         rdfs:range educor:KnowledgeTopic ;
+                         rdfs:label "requires knowledge" .
+
+
+###  https://w3id.org/def/courses#competencyRequired
+courses:competencyRequired rdf:type owl:ObjectProperty ;
+                           rdfs:domain educor:Skill ;
+                           rdfs:range educor:KnowledgeTopic ,
+                                      educor:Skill ;
+                           rdfs:label "competency required" .
+
+
+###  https://w3id.org/def/courses#containsResource
+courses:containsResource rdf:type owl:ObjectProperty ;
+                         rdfs:domain courses:CourseSession ;
+                         rdfs:range educor:EducationalResource ;
+                         rdfs:label "contains resource" .
+
+
+###  https://w3id.org/def/courses#coursePrerequisites
+courses:coursePrerequisites rdf:type owl:ObjectProperty ;
+                            rdfs:domain schema:Course ;
+                            rdfs:label "course prerequisites" .
+
+
+###  https://w3id.org/def/courses#hasType
+courses:hasType rdf:type owl:ObjectProperty ;
+                rdfs:domain educor:EducationalResource ;
+                rdfs:range [ owl:intersectionOf ( skos:Concept
+                                                  [ rdf:type owl:Restriction ;
+                                                    owl:onProperty skos:inScheme ;
+                                                    owl:hasValue <https://w3id.org/coursesonto/kos/educational-type>
+                                                  ]
+                                                ) ;
+                             rdf:type owl:Class
+                           ] ;
+                rdfs:label "has type" .
+
+
+###  https://w3id.org/def/courses#responsibleEntity
+courses:responsibleEntity rdf:type owl:ObjectProperty ;
+                          rdfs:domain schema:Course ;
+                          rdfs:label "responsible entity" .
+
+
+#################################################################
+#    Data properties
+#################################################################
+
+###  http://schema.org/about
+schema:about rdf:type owl:DatatypeProperty ;
+             rdfs:domain courses:CourseSession ;
+             rdfs:range rdf:langString ;
+             rdfs:label "about" .
+
+
+###  http://schema.org/audience
+schema:audience rdf:type owl:DatatypeProperty ;
+                rdfs:domain schema:Course ;
+                rdfs:range rdf:langString ;
+                rdfs:label "audience" .
+
+
+###  http://schema.org/description
+schema:description rdf:type owl:DatatypeProperty ;
+                   rdfs:range rdf:langString ;
+                   rdfs:label "description" .
+
+
+###  http://schema.org/educationalLevel
+schema:educationalLevel rdf:type owl:DatatypeProperty ;
+                        rdfs:range xsd:string ;
+                        rdfs:label "educational level" .
+
+
+###  http://schema.org/email
+schema:email rdf:type owl:DatatypeProperty ;
+             rdfs:domain schema:Person ;
+             rdfs:range xsd:string ;
+             rdfs:label "email" .
+
+
+###  http://schema.org/gender
+schema:gender rdf:type owl:DatatypeProperty ;
+              rdfs:domain schema:Person ;
+              rdfs:range xsd:short ;
+              rdfs:label "gender" .
+
+
+###  http://schema.org/isAccessibleForFree
+schema:isAccessibleForFree rdf:type owl:DatatypeProperty ;
+                           rdfs:domain educor:EducationalResource ;
+                           rdfs:range xsd:boolean ;
+                           rdfs:label "is accessible for free" .
+
+
+###  http://schema.org/license
+schema:license rdf:type owl:DatatypeProperty ;
+               rdfs:domain schema:Course ;
+               rdfs:range rdf:langString ;
+               rdfs:label "license" .
+
+
+###  http://schema.org/location
+schema:location rdf:type owl:DatatypeProperty ;
+                rdfs:domain schema:EducationalOrganization ;
+                rdfs:range rdf:langString ;
+                rdfs:label "location" .
+
+
+###  http://schema.org/name
+schema:name rdf:type owl:DatatypeProperty ;
+            rdfs:range xsd:string ;
+            rdfs:label "name" .
+
+
+###  http://schema.org/requirements
+schema:requirements rdf:type owl:DatatypeProperty ;
+                    rdfs:domain schema:Course ;
+                    rdfs:range rdf:langString ;
+                    rdfs:label "requirements" .
+
+
+###  http://schema.org/seeAlso
+schema:seeAlso rdf:type owl:DatatypeProperty ;
+               rdfs:domain schema:Course ;
+               rdfs:range rdf:langString ;
+               rdfs:label "see also" .
+
+
+###  http://schema.org/timeRequired
+schema:timeRequired rdf:type owl:DatatypeProperty ;
+                    rdfs:range xsd:duration ;
+                    rdfs:label "time required" .
+
+
+###  http://schema.org/url
+schema:url rdf:type owl:DatatypeProperty ;
+           rdfs:range xsd:anyURI ;
+           rdfs:label "url" .
+
+
+###  https://w3id.org/def/courses#coreResource
+courses:coreResource rdf:type owl:DatatypeProperty ;
+                     rdfs:domain educor:EducationalResource ;
+                     rdfs:range xsd:boolean ;
+                     rdfs:label "core educational resource" .
+
+
+###  https://w3id.org/def/courses#mainSkill
+courses:mainSkill rdf:type owl:DatatypeProperty ;
+                  rdfs:domain educor:Skill ;
+                  rdfs:range xsd:boolean ;
+                  rdfs:label "main skill" .
+
+
+###  https://w3id.org/def/courses#theoreticalTopic
+courses:theoreticalTopic rdf:type owl:DatatypeProperty ;
+                         rdfs:domain educor:KnowledgeTopic ;
+                         rdfs:range xsd:boolean ;
+                         rdfs:label "theoretical topic" .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://schema.org/CollegeOrUniversity
+schema:CollegeOrUniversity rdf:type owl:Class ;
+                           rdfs:subClassOf schema:EducationalOrganization ;
+                           rdfs:label "College Or University" .
+
+
+###  http://schema.org/Course
+schema:Course rdf:type owl:Class ;
+              rdfs:subClassOf educor:LearningPath ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:provider ;
+                                owl:someValuesFrom schema:EducationalOrganization
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:provider ;
+                                owl:someValuesFrom schema:Person
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:teaches ;
+                                owl:someValuesFrom educor:KnowledgeTopic
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty courses:coursePrerequisites ;
+                                owl:someValuesFrom educor:KnowledgeTopic
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty courses:coursePrerequisites ;
+                                owl:someValuesFrom educor:LearningOutcome
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty courses:coursePrerequisites ;
+                                owl:someValuesFrom educor:Skill
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty courses:responsibleEntity ;
+                                owl:someValuesFrom schema:EducationalOrganization
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty courses:responsibleEntity ;
+                                owl:someValuesFrom schema:Person
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:description ;
+                                owl:someValuesFrom rdf:langString
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:educationalLevel ;
+                                owl:someValuesFrom xsd:string
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:name ;
+                                owl:someValuesFrom xsd:string
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:timeRequired ;
+                                owl:someValuesFrom xsd:duration
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:url ;
+                                owl:someValuesFrom xsd:anyURI
+                              ] ;
+              rdfs:label "Course" .
+
+
+###  http://schema.org/CourseInstance
+schema:CourseInstance rdf:type owl:Class ;
+                      owl:equivalentClass courses:CourseSession ;
+                      rdfs:label "Course Instance" .
+
+
+###  http://schema.org/EducationalOrganization
+schema:EducationalOrganization rdf:type owl:Class ;
+                               rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                                 owl:onProperty schema:name ;
+                                                 owl:someValuesFrom xsd:string
+                                               ] ,
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty schema:url ;
+                                                 owl:someValuesFrom xsd:anyURI
+                                               ] ;
+                               rdfs:label "Educational Organization" .
+
+
+###  http://schema.org/Person
+schema:Person rdf:type owl:Class ;
+              rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:name ;
+                                owl:someValuesFrom xsd:string
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty schema:url ;
+                                owl:someValuesFrom xsd:anyURI
+                              ] ;
+              rdfs:label "Person" .
+
+
+###  http://www.w3.org/2004/02/skos/core#Concept
+skos:Concept rdf:type owl:Class .
+
+
+###  https://github.com/tibonto/educor#EducationalResource
+educor:EducationalResource rdf:type owl:Class ;
+                           rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                             owl:onProperty schema:copyrightHolder ;
+                                             owl:someValuesFrom schema:EducationalOrganization
+                                           ] ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty schema:copyrightHolder ;
+                                             owl:someValuesFrom schema:Person
+                                           ] ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty schema:name ;
+                                             owl:someValuesFrom xsd:string
+                                           ] ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty schema:url ;
+                                             owl:someValuesFrom xsd:anyURI
+                                           ] ;
+                           rdfs:label "Educational Resource" .
+
+
+###  https://github.com/tibonto/educor#KnowledgeTopic
+educor:KnowledgeTopic rdf:type owl:Class ;
+                      rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                        owl:onProperty schema:educationalLevel ;
+                                        owl:someValuesFrom xsd:string
+                                      ] ,
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty schema:name ;
+                                        owl:someValuesFrom xsd:string
+                                      ] ;
+                      rdfs:label "Knowledge Topic" .
+
+
+###  https://github.com/tibonto/educor#LearningOutcome
+educor:LearningOutcome rdf:type owl:Class ;
+                       rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                         owl:onProperty schema:description ;
+                                         owl:someValuesFrom rdf:langString
+                                       ] ,
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty schema:name ;
+                                         owl:someValuesFrom xsd:string
+                                       ] ;
+                       rdfs:label "Learning Outcome" .
+
+
+###  https://github.com/tibonto/educor#LearningPath
+educor:LearningPath rdf:type owl:Class ;
+                    rdfs:label "Learning Path" .
+
+
+###  https://github.com/tibonto/educor#Skill
+educor:Skill rdf:type owl:Class ;
+             rdfs:subClassOf [ rdf:type owl:Restriction ;
+                               owl:onProperty schema:teaches ;
+                               owl:someValuesFrom educor:KnowledgeTopic
+                             ] ,
+                             [ rdf:type owl:Restriction ;
+                               owl:onProperty schema:educationalLevel ;
+                               owl:someValuesFrom xsd:string
+                             ] ,
+                             [ rdf:type owl:Restriction ;
+                               owl:onProperty schema:name ;
+                               owl:someValuesFrom xsd:string
+                             ] ,
+                             [ rdf:type owl:Restriction ;
+                               owl:onProperty schema:timeRequired ;
+                               owl:someValuesFrom xsd:duration
+                             ] ,
+                             [ rdf:type owl:Restriction ;
+                               owl:onProperty schema:url ;
+                               owl:someValuesFrom xsd:anyURI
+                             ] ;
+             rdfs:label "Skill" .
+
+
+###  https://w3id.org/def/courses#CourseSession
+courses:CourseSession rdf:type owl:Class ;
+                      rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                        owl:onProperty schema:name ;
+                                        owl:someValuesFrom xsd:string
+                                      ] ;
+                      rdfs:label "Course Session" .
+
+
+###  https://w3id.org/def/courses#Lecturer
+courses:Lecturer rdf:type owl:Class ;
+                 rdfs:subClassOf schema:Person ;
+                 rdfs:label "Lecturer" .
+
+
+#################################################################
+#    Individuals
+#################################################################
+
+###  https://w3id.org/coursesonto/kos/educational-type
+<https://w3id.org/coursesonto/kos/educational-type> rdf:type owl:NamedIndividual .
+
+
+###  Generated by the OWL API (version 4.5.25.2023-02-15T19:15:49Z) https://github.com/owlcs/owlapi
