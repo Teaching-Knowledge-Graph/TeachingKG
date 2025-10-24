@@ -12,7 +12,7 @@
 
 
 
-<https://w3id.org/coursesonto/kos/educational-type> a skos:ConceptScheme; 
+<https://w3id.org/def/courses/kos/educational-type> a skos:ConceptScheme; 
 	skos:definition "Type of educational resources"; 
  	skos:hasTopConcept edutype:theory, edutype:practice, edutype:mix; 
 	skos:notation "resource_type";
@@ -23,16 +23,16 @@
 
 
 edutype:theory a skos:Concept; 
- 	skos:inScheme <https://w3id.org/coursesonto/kos/educational-type>; 
+ 	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
  	skos:notation "theory"; 
  	skos:prefLabel "theory" .
 
 edutype:mix a skos:Concept; 
- 	skos:inScheme <https://w3id.org/coursesonto/kos/educational-type>; 
+ 	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
  	skos:notation "mix"; 
  	skos:prefLabel "mix" .
 
 edutype:practice a skos:Concept; 
- 	skos:inScheme <https://w3id.org/coursesonto/kos/educational-type>; 
+ 	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
  	skos:notation "practice"; 
  	skos:prefLabel "practice" .
