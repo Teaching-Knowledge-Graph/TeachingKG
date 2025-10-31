@@ -1,0 +1,1 @@
+https://kg.app.citius.gal/data/sparql/teaching/query

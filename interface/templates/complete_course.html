@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card form-section">
+    <div class="card-body">
+      <h2 class="card-title">Complete Your Existing Course</h2>
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label">Course Title</label>
+          <input class="form-control" name="course_title">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Existing resource titles (enter multiple lines)</label>
+          <textarea class="form-control" name="existing_titles" placeholder="One title per line"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Find Complementary Content</button>
+      </form>
+    </div>
+  </div>
+
+  {% if complementary %}
+    <div class="card mt-4">
+      <div class="card-body">
+        <h3 class="card-title">Complementary Resources</h3>
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead><tr><th>Title</th><th>URL</th></tr></thead>
+            <tbody>
+              {% for c in complementary %}
+                <tr>
+                  <td>{{ c.Title }}</td>
+                  <td><a href="{{ c.URL }}" target="_blank">{{ c.URL }}</a></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock %}

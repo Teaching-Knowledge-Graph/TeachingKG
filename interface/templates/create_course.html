@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card form-section">
+    <div class="card-body">
+      <h2 class="card-title">Create Your Course</h2>
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label">Course Title</label>
+          <input class="form-control" name="course_title">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Course Description</label>
+          <textarea class="form-control" name="course_description"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search Similar Courses</button>
+      </form>
+    </div>
+  </div>
+
+  {% if results %}
+    <div class="row mt-4 g-3">
+      <div class="col-lg-7">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h3 class="card-title mb-0">Similar Courses in the KG</h3>
+              <div class="text-muted small text-end">
+                <div>Click a row to visualize connections</div>
+                <div>Use the chevron to view topics and levels</div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <style>
+                #resultsTable td, #resultsTable th { white-space: normal; word-break: break-word; }
+              </style>
+              <table class="table table-sm table-hover align-middle" id="resultsTable" style="table-layout: fixed;">
+                <thead>
+                  <tr>
+                    <th style="width: 36px;" class="text-muted small">Details</th>
+                    <th style="width: 48%;">Title</th>
+                    <th style="width: 10%;">Topics</th>
+                    <th style="width: 18%;">Theory/Practical</th>
+                    <th style="width: 24%;">Levels</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in results %}
+                    {% set outer_index = loop.index0 %}
+                    <tr class="result-row" data-index="{{ loop.index0 }}">
+                      <td>
+                        <button class="btn btn-sm btn-outline-secondary toggle-details" type="button" data-bs-toggle="collapse" data-bs-target="#detail-{{ loop.index0 }}" aria-expanded="false" aria-controls="detail-{{ loop.index0 }}">
+                          <i class="bi bi-chevron-down"></i>
+                        </button>
+                      </td>
+                      <td class="fw-semibold" title="{{ r.name or r.uri }}">
+                        {% if r.url %}<a href="{{ r.url }}" target="_blank">{{ r.name or r.uri }}</a>{% else %}{{ r.name or r.uri }}{% endif %}
+                        <div class="form-check mt-1">
+                          <input class="form-check-input select-course" type="checkbox" id="add-course-{{ loop.index0 }}" data-index="{{ loop.index0 }}" data-uri="{{ r.uri }}" data-name="{{ r.name or r.uri }}">
+                          <label class="form-check-label small text-muted" for="add-course-{{ loop.index0 }}">Add course</label>
+                        </div>
+                      </td>
+                      <td><span class="badge bg-secondary">{{ r.summary.topic_count }}</span></td>
+                      <td>
+                        <span class="badge bg-info">T {{ r.summary.theoretical_count }}</span>
+                        <span class="badge bg-warning text-dark">P {{ r.summary.practical_count }}</span>
+                      </td>
+                      <td>
+                        {% for lvl, cnt in r.summary.levels.items() %}
+                          <span class="badge bg-light text-dark border me-1">{{ lvl }}: {{ cnt }}</span>
+                        {% endfor %}
+                      </td>
+                    </tr>
+                    <tr class="collapse bg-light" id="detail-{{ loop.index0 }}">
+                      <td></td>
+                      <td colspan="4">
+                        <div class="py-3">
+                          <div class="mb-2 fw-semibold">Topics and Levels</div>
+                          <div class="d-flex flex-wrap gap-2">
+                            {% for t in r.topics %}
+                              <label class="badge rounded-pill bg-light text-dark border" title="{{ t.uri }}" style="cursor:pointer;">
+                                <input class="form-check-input me-1 select-topic" type="checkbox" data-index="{{ outer_index }}" data-uri="{{ t.uri }}" data-name="{{ t.name }}" data-level="{{ t.educationalLevel or '' }}" data-theoretical="{{ t.theoretical }}" data-main="{{ t.main }}" style="transform:scale(0.9);">
+                                {{ t.name }}
+                                {% if t.educationalLevel %}<span class="ms-1 text-muted">({{ t.educationalLevel }})</span>{% endif %}
+                                {% if t.theoretical is true %}<span class="ms-1 badge bg-info">T</span>{% elif t.theoretical is false %}<span class="ms-1 badge bg-warning text-dark">P</span>{% endif %}
+                                {% if t.main is true %}<span class="ms-1 badge bg-primary">Main</span>{% endif %}
+                              </label>
+                            {% endfor %}
+                          </div>
+                          {% if r.providers and r.providers|length > 0 %}
+                            <div class="mt-3 mb-2 fw-semibold">Providers</div>
+                            <div class="d-flex flex-wrap gap-2">
+                              {% for p in r.providers %}
+                                <span class="badge rounded-pill bg-light text-dark border" title="{{ p.uri }}">
+                                  {{ p.name }}
+                                  {% if p.type %}
+                                    <span class="ms-1 badge {{ 'bg-warning text-dark' if p.type=='Person' else 'bg-secondary' }}">{{ p.type }}</span>
+                                  {% endif %}
+                                </span>
+                              {% endfor %}
+                            </div>
+                          {% endif %}
+                          {% if r.competencies and r.competencies|length > 0 %}
+                            <div class="mt-3 mb-2 fw-semibold">Related Competencies</div>
+                            <div class="d-flex flex-wrap gap-2">
+                              {% for c in r.competencies %}
+                                <label class="badge rounded-pill bg-light text-dark border" title="{{ c.uri }}" style="cursor:pointer;">
+                                  <input class="form-check-input me-1 select-competency" type="checkbox" data-index="{{ outer_index }}" data-uri="{{ c.uri }}" data-name="{{ c.name }}" style="transform:scale(0.9);">
+                                  {{ c.name }}
+                                </label>
+                              {% endfor %}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-body">
+            <h4 class="card-title mb-2">Interactive Knowledge Graph</h4>
+            <style>
+              .legend-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+            </style>
+            <div class="d-flex align-items-center gap-3 mb-2 small">
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="toggleCompetencies" checked>
+                <label class="form-check-label" for="toggleCompetencies">Show competencies</label>
+              </div>
+            </div>
+            <div id="graphContainer" style="height: 460px; border: 1px solid #e9ecef; border-radius: .5rem;"></div>
+            <div class="mt-2 text-muted" style="font-size: 0.85rem;">
+              <div class="mb-1">Nodes are colored by type. Click and drag to explore.</div>
+              <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="small"><span class="legend-dot" style="background:#2c3e50;"></span> Course</span>
+                <span class="small"><span class="legend-dot" style="background:#1abc9c;"></span> Topic</span>
+                <span class="small"><span class="legend-dot" style="background:#f39c12;"></span> Person</span>
+                <span class="small"><span class="legend-dot" style="background:#9b59b6;"></span> Organization</span>
+                <span class="small"><span class="legend-dot" style="background:#e74c3c;"></span> Competency</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Builder: Selected Content -->
+    <div class="card mt-3">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Build Your New Course</h4>
+        <div class="mb-3">
+          <label class="form-label">New Course Title</label>
+          <input class="form-control" id="newCourseTitle" placeholder="Enter new course name">
+        </div>
+        <div class="d-flex gap-2 mb-3">
+          <button type="button" class="btn btn-dark btn-sm" id="btnDownloadJSON">
+            <i class="bi bi-download"></i> Download JSON
+          </button>
+          <button type="button" class="btn btn-dark btn-sm" id="btnDownloadTTL">
+            <i class="bi bi-braces"></i> Download TTL
+          </button>
+        </div>
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="border rounded p-2 h-100">
+              <div class="fw-semibold mb-2">Included Courses</div>
+              <div id="builderCourses" class="d-flex flex-wrap gap-2 small text-wrap"></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="border rounded p-2 h-100">
+              <div class="fw-semibold mb-2">Selected Topics</div>
+              <div id="builderTopics" class="d-flex flex-wrap gap-2 small text-wrap"></div>
+            </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="border rounded p-2">
+              <div class="fw-semibold mb-2">Selected Competencies</div>
+              <div id="builderCompetencies" class="d-flex flex-wrap gap-2 small text-wrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <script id="resultsData" type="application/json">{{ results | tojson | safe }}</script>
+    <script id="graphData" type="application/json">{{ graph_data | tojson | safe }}</script>
+    <script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+    <script>
+      const results = JSON.parse(document.getElementById('resultsData').textContent || '[]');
+      const initialGraph = (() => { const el = document.getElementById('graphData'); return el && el.textContent ? JSON.parse(el.textContent) : null; })();
+      let currentIndex = 0;
+
+      function renderGraph(data) {
+        const container = document.getElementById('graphContainer');
+        if (!container) return;
+        const groups = {
+          'Course': { color: { background: '#2c3e50' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+          'Topic': { color: { background: '#1abc9c' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+          'Person': { color: { background: '#f39c12' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+          'Organization': { color: { background: '#9b59b6' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+          'Provider': { color: { background: '#9b59b6' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+          'Competency': { color: { background: '#e74c3c' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } }
+        };
+        const showCompetencies = document.getElementById('toggleCompetencies')?.checked;
+        const baseNodes = (data?.nodes || []);
+        const baseEdges = (data?.edges || []);
+        const filteredNodes = showCompetencies ? baseNodes : baseNodes.filter(n => n.group !== 'Competency');
+        const filteredEdges = showCompetencies ? baseEdges : baseEdges.filter(e => {
+          const fromIsComp = baseNodes.find(n => n.id === e.from)?.group === 'Competency';
+          const toIsComp = baseNodes.find(n => n.id === e.to)?.group === 'Competency';
+          return !fromIsComp && !toIsComp;
+        });
+        const nodes = new vis.DataSet(filteredNodes.map(n => ({ id: n.id, label: n.label, group: n.group, shape: 'dot', size: 18, font: { size: 12 } })));
+        const edges = new vis.DataSet(filteredEdges.map(e => ({ from: e.from, to: e.to, arrows: 'to', label: e.label || '', font: { align: 'horizontal', size: 10, background: 'rgba(255,255,255,0.7)' }, smooth: { type: 'dynamic' } })));
+        const network = new vis.Network(container, { nodes, edges }, { groups, physics: { stabilization: true }, interaction: { hover: true } });
+        return network;
+      }
+
+      function selectResult(index) {
+        currentIndex = index;
+        const item = results[index];
+        renderGraph(item.graph);
+      }
+
+      // Bind table row clicks
+      document.querySelectorAll('tr.result-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const idx = parseInt(row.getAttribute('data-index'));
+          selectResult(idx);
+        });
+      });
+
+      // Toggle display of competencies
+      document.getElementById('toggleCompetencies')?.addEventListener('change', () => {
+        selectResult(currentIndex);
+      });
+
+      // --- Builder state and handlers ---
+      const builder = { title: '', courses: [], topics: [], competencies: [] };
+
+      function upsert(list, item, key = 'uri') {
+        if (!item || !item[key]) return;
+        if (!list.some(x => x[key] === item[key])) list.push(item);
+      }
+      function removeBy(list, uri) {
+        const i = list.findIndex(x => x.uri === uri);
+        if (i >= 0) list.splice(i, 1);
+      }
+      function mkChip(text, uri, onRemove) {
+        const span = document.createElement('span');
+        span.className = 'badge rounded-pill bg-light text-dark border';
+        span.title = uri;
+        span.style.display = 'inline-flex';
+        span.style.alignItems = 'center';
+        span.style.gap = '6px';
+        span.textContent = text;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-close btn-close-sm';
+        btn.ariaLabel = 'Remove';
+        btn.style.filter = 'invert(1)';
+        btn.addEventListener('click', onRemove);
+        span.appendChild(btn);
+        return span;
+      }
+      function renderBuilder() {
+        const c = document.getElementById('builderCourses');
+        const t = document.getElementById('builderTopics');
+        const m = document.getElementById('builderCompetencies');
+        c.innerHTML = t.innerHTML = m.innerHTML = '';
+        builder.courses.forEach(it => c.appendChild(mkChip(it.name || it.uri, it.uri, () => { removeBy(builder.courses, it.uri); syncCheckbox('course', it.uri, false); renderBuilder(); })));
+        builder.topics.forEach(it => t.appendChild(mkChip(it.name || it.uri, it.uri, () => { removeBy(builder.topics, it.uri); syncCheckbox('topic', it.uri, false); renderBuilder(); })));
+        builder.competencies.forEach(it => m.appendChild(mkChip(it.name || it.uri, it.uri, () => { removeBy(builder.competencies, it.uri); syncCheckbox('competency', it.uri, false); renderBuilder(); })));
+      }
+      function syncCheckbox(kind, uri, checked) {
+        let sel = '';
+        if (kind === 'course') sel = `.select-course[data-uri="${CSS.escape(uri)}"]`;
+        if (kind === 'topic') sel = `.select-topic[data-uri="${CSS.escape(uri)}"]`;
+        if (kind === 'competency') sel = `.select-competency[data-uri="${CSS.escape(uri)}"]`;
+        document.querySelectorAll(sel).forEach(el => { el.checked = checked; });
+      }
+      document.querySelectorAll('.select-course').forEach(el => {
+        el.addEventListener('change', () => {
+          const item = { uri: el.getAttribute('data-uri'), name: el.getAttribute('data-name') };
+          if (el.checked) upsert(builder.courses, item); else removeBy(builder.courses, item.uri);
+          renderBuilder();
+        });
+      });
+      document.querySelectorAll('.select-topic').forEach(el => {
+        el.addEventListener('change', () => {
+          const item = {
+            uri: el.getAttribute('data-uri'),
+            name: el.getAttribute('data-name'),
+            educationalLevel: el.getAttribute('data-level') || undefined,
+            theoretical: el.getAttribute('data-theoretical') === 'True' || el.getAttribute('data-theoretical') === 'true',
+            main: el.getAttribute('data-main') === 'True' || el.getAttribute('data-main') === 'true'
+          };
+          if (el.checked) upsert(builder.topics, item); else removeBy(builder.topics, item.uri);
+          renderBuilder();
+        });
+      });
+      document.querySelectorAll('.select-competency').forEach(el => {
+        el.addEventListener('change', () => {
+          const item = { uri: el.getAttribute('data-uri'), name: el.getAttribute('data-name') };
+          if (el.checked) upsert(builder.competencies, item); else removeBy(builder.competencies, item.uri);
+          renderBuilder();
+        });
+      });
+      document.getElementById('newCourseTitle')?.addEventListener('input', (e) => {
+        builder.title = e.target.value;
+      });
+
+      function download(filename, content, mime) {
+        const blob = new Blob([content], { type: mime || 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function fileSlug(s) {
+        const base = (s && s.trim()) ? s.trim().toLowerCase() : 'new_course';
+        return base.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').substring(0, 60) || 'new_course';
+      }
+
+      function buildJSON() {
+        return JSON.stringify({
+          title: builder.title || 'Untitled',
+          courses: builder.courses,
+          topics: builder.topics,
+          competencies: builder.competencies
+        }, null, 2);
+      }
+
+      function ttlEscape(str) {
+        return (str || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      }
+
+      function buildTTL() {
+        const nl = '\n';
+        const lines = [
+          '@prefix schema: <http://schema.org/> .',
+          '@prefix courses: <https://w3id.org/def/courses#> .',
+          '@prefix educor: <https://github.com/tibonto/educor#> .',
+          ''
+        ];
+        const title = builder.title && builder.title.trim() ? builder.title.trim() : 'Untitled';
+        lines.push('[ a schema:Course ;');
+        lines.push(`  schema:name "${ttlEscape(title)}" ;`);
+        if (builder.courses.length) {
+          const objs = builder.courses.map(c => `<${c.uri}>`).join(', ');
+          lines.push(`  schema:isBasedOn ${objs} ;`);
+        }
+        if (builder.topics.length) {
+          const objs = builder.topics.map(t => `<${t.uri}>`).join(', ');
+          lines.push(`  schema:teaches ${objs} ;`);
+        }
+        if (builder.competencies.length) {
+          const objs = builder.competencies.map(c => `<${c.uri}>`).join(', ');
+          lines.push(`  courses:competencyRequired ${objs} ;`);
+        }
+        // remove trailing semicolon of last predicate
+        if (lines[lines.length - 1].endsWith(' ;')) {
+          lines[lines.length - 1] = lines[lines.length - 1].slice(0, -2);
+        }
+        lines.push('].');
+        return lines.join(nl) + nl;
+      }
+
+      document.getElementById('btnDownloadJSON')?.addEventListener('click', () => {
+        download(`${fileSlug(builder.title)}.json`, buildJSON(), 'application/json');
+      });
+      document.getElementById('btnDownloadTTL')?.addEventListener('click', () => {
+        download(`${fileSlug(builder.title)}.ttl`, buildTTL(), 'text/turtle');
+      });
+      // Initial render with first result or provided graph_data
+      if (initialGraph) {
+        renderGraph(initialGraph);
+      } else if (results && results.length > 0) {
+        selectResult(0);
+      }
+    </script>
+  {% endif %}
+
+{% endblock %}

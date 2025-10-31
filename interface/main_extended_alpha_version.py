@@ -1,24 +1,497 @@
-import streamlit as st
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from neo4j import GraphDatabase
-import pandas as pd
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
+from dotenv import dotenv_values
+from datetime import datetime, timezone
+from rdflib import Graph as RDFGraph, Namespace, URIRef, Literal
+from rdflib.namespace import RDF, RDFS, XSD
+import difflib
+import re
 
-# Neo4j connection setup
+# Prefer reading secrets directly from the interface/.env file (not the OS environment).
+# This returns a dict of values in the .env file. If a key is missing there we fall back to
+# a sensible default (but we do NOT prefer OS env vars over the .env file per your request).
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+env_values = {}
+try:
+    env_values = dotenv_values(env_path) or {}
+except Exception:
+    env_values = {}
+
+# Simple Flask app to replace the previous Streamlit UI. This file implements:
+# - Flask routes for the previously separate Streamlit tabs (Add, Create, Complete, About, Licensing, Examples)
+# - User registration and login that stores users in Neo4j
+# - Persistence of courses in Neo4j and linking courses to the creating user
+
+app = Flask(__name__)
+# Read secret key from .env file first, fallback to a dev value if missing
+app.config['SECRET_KEY'] = env_values.get('FLASK_SECRET_KEY') or 'dev-secret-change-in-prod'
+
+
+# Namespaces for RDF graph
+SCHEMA = Namespace("http://schema.org/")
+COURSES = Namespace("https://w3id.org/def/courses#")
+EDUCOR = Namespace("https://github.com/tibonto/educor#")
+
+# Load RDF graph from mapping_rules/output.nt (N-Triples)
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+RDF_FILE = os.path.join(REPO_ROOT, 'mapping_rules', 'output.nt')
+_rdf_graph = None
+try:
+    g = RDFGraph()
+    if os.path.exists(RDF_FILE):
+        g.parse(RDF_FILE, format='nt')
+        _rdf_graph = g
+    else:
+        _rdf_graph = None
+except Exception:
+    _rdf_graph = None
+
+
+def _first_literal(s, p):
+    if not _rdf_graph:
+        return None
+    for o in _rdf_graph.objects(s, p):
+        if isinstance(o, Literal):
+            return str(o)
+        # if it's a URI, try to find its name
+        if isinstance(o, URIRef):
+            name = _first_literal(o, SCHEMA.name)
+            if name:
+                return name
+    return None
+
+
+def _bool_value(s, p):
+    if not _rdf_graph:
+        return None
+    for o in _rdf_graph.objects(s, p):
+        if isinstance(o, Literal):
+            if o.datatype == XSD.boolean:
+                return bool(str(o).lower() == 'true')
+            # Some values might be 'TRUE'/'FALSE' as strings
+            val = str(o).strip().lower()
+            if val in ('true', '1'):
+                return True
+            if val in ('false', '0'):
+                return False
+    return None
+
+
+def _get_level_value(subject):
+    """Return a readable educational level value from triples.
+    Prefers a literal; if URI, tries schema:name, else falls back to URI string.
+    """
+    if not _rdf_graph:
+        return None
+    for o in _rdf_graph.objects(subject, SCHEMA.educationalLevel):
+        if isinstance(o, Literal):
+            return str(o)
+        if isinstance(o, URIRef):
+            name = _first_literal(o, SCHEMA.name)
+            return name or str(o)
+    return None
+
+
+def _short_level_label(val: str) -> str:
+    if not val:
+        return ''
+    s = str(val)
+    # take last fragment if URI-like
+    if '/' in s or '#' in s:
+        s = s.split('#')[-1].split('/')[-1]
+    low = s.lower()
+    # normalize common categories
+    if any(k in low for k in ['phd', 'doctoral', 'doctorate', 'dphil']):
+        return 'PhD'
+    if any(k in low for k in ['master', 'msc', 'm.sc', 'gradua']):
+        return 'Master'
+    if any(k in low for k in ['bachelor', 'undergrad', 'bsc', 'b.sc', 'ba']):
+        return 'Bachelor'
+    if any(k in low for k in ['high', 'secondary']):
+        return 'HS'
+    if any(k in low for k in ['diploma', 'certificate', 'cert']):
+        return 'Cert'
+    if 'associate' in low:
+        return 'Associate'
+    # fallback: split camel case and truncate
+    s = re.sub(r'([a-z])([A-Z])', r'\1 \2', s)
+    return (s[:12] + '…') if len(s) > 13 else s
+
+
+def list_courses_from_rdf():
+    if not _rdf_graph:
+        return []
+    courses = []
+    for course in _rdf_graph.subjects(RDF.type, SCHEMA.Course):
+        name = _first_literal(course, SCHEMA.name)
+        url = _first_literal(course, SCHEMA.url)
+        providers = []
+        seen = set()
+        for pred in (SCHEMA.provider, COURSES.responsibleEntity):
+            for p in _rdf_graph.objects(course, pred):
+                pid = str(p)
+                if pid in seen:
+                    continue
+                seen.add(pid)
+                ptype = 'Organization' if ((p, RDF.type, SCHEMA.EducationalOrganization) in _rdf_graph or (p, RDF.type, SCHEMA.CollegeOrUniversity) in _rdf_graph) else ('Person' if (p, RDF.type, SCHEMA.Person) in _rdf_graph else None)
+                providers.append({
+                    'uri': pid,
+                    'name': _first_literal(p, SCHEMA.name) or pid,
+                    'type': ptype
+                })
+        topic_count = sum(1 for _ in _rdf_graph.objects(course, SCHEMA.teaches))
+        courses.append({'uri': str(course), 'name': name, 'url': url, 'providers': providers, 'topic_count': topic_count})
+    courses.sort(key=lambda c: (c['name'] or '').lower())
+    return courses
+
+
+def course_detail_from_rdf(course_id_or_name: str):
+    if not _rdf_graph:
+        return None
+    target = None
+    # attempt to resolve by URI
+    if course_id_or_name and course_id_or_name.startswith('http'):
+        target = URIRef(course_id_or_name)
+    else:
+        # resolve by name
+        for s in _rdf_graph.subjects(RDF.type, SCHEMA.Course):
+            if _first_literal(s, SCHEMA.name) == course_id_or_name:
+                target = s
+                break
+    if not target:
+        return None
+
+    name = _first_literal(target, SCHEMA.name)
+    url = _first_literal(target, SCHEMA.url)
+
+    providers = []
+    seen = set()
+    for pred in (SCHEMA.provider, COURSES.responsibleEntity):
+        for p in _rdf_graph.objects(target, pred):
+            pid = str(p)
+            if pid in seen:
+                continue
+            seen.add(pid)
+            ptype = 'Organization' if ((p, RDF.type, SCHEMA.EducationalOrganization) in _rdf_graph or (p, RDF.type, SCHEMA.CollegeOrUniversity) in _rdf_graph) else ('Person' if (p, RDF.type, SCHEMA.Person) in _rdf_graph else None)
+            providers.append({
+                'uri': pid,
+                'name': _first_literal(p, SCHEMA.name) or pid,
+                'type': ptype,
+                'location': _first_literal(p, SCHEMA.location) if ptype == 'Organization' else None,
+                'email': _first_literal(p, SCHEMA.email) if ptype == 'Person' else None,
+            })
+
+    topics = []
+    level_counts = {}
+    theoretical_count = 0
+    practical_count = 0
+    for t in _rdf_graph.objects(target, SCHEMA.teaches):
+        tname = _first_literal(t, SCHEMA.name) or str(t)
+        theoretical = _bool_value(t, COURSES.theoreticalTopic)
+        main = _bool_value(t, COURSES.mainTopic)
+        level_raw = _get_level_value(t)
+        level = _short_level_label(level_raw) if level_raw else None
+        if theoretical is True:
+            theoretical_count += 1
+        elif theoretical is False:
+            practical_count += 1
+        if level:
+            level_counts[level] = level_counts.get(level, 0) + 1
+        topics.append({
+            'uri': str(t),
+            'name': tname,
+            'theoretical': theoretical,
+            'main': main,
+            'educationalLevel': level,
+        })
+
+    # Related competencies via skills that require or teach these topics
+    related_competencies = []
+    comp_seen = set()
+    for t in _rdf_graph.objects(target, SCHEMA.teaches):
+        # skills that require knowledge of t
+        for s in _rdf_graph.subjects(EDUCOR.requiresKnowledge, t):
+            for c in _rdf_graph.objects(s, COURSES.competencyRequired):
+                cid = str(c)
+                if cid in comp_seen:
+                    continue
+                comp_seen.add(cid)
+                related_competencies.append({
+                    'uri': cid,
+                    'name': _first_literal(c, SCHEMA.name) or cid,
+                    'educationalLevel': _first_literal(c, SCHEMA.educationalLevel)
+                })
+        # skills that teach t
+        for s in _rdf_graph.subjects(SCHEMA.teaches, t):
+            for c in _rdf_graph.objects(s, COURSES.competencyRequired):
+                cid = str(c)
+                if cid in comp_seen:
+                    continue
+                comp_seen.add(cid)
+                related_competencies.append({
+                    'uri': cid,
+                    'name': _first_literal(c, SCHEMA.name) or cid,
+                    'educationalLevel': _first_literal(c, SCHEMA.educationalLevel)
+                })
+
+    return {
+        'uri': str(target),
+        'name': name,
+        'url': url,
+        'providers': providers,
+        'topics': topics,
+        'summary': {
+            'topic_count': len(topics),
+            'theoretical_count': theoretical_count,
+            'practical_count': practical_count,
+            'levels': level_counts,
+        },
+        'related_competencies': related_competencies,
+    }
+
+
+def _text(o):
+    if o is None:
+        return ''
+    return str(o)
+
+
+def _string_similarity(a: str, b: str) -> float:
+    a = (a or '').strip().lower()
+    b = (b or '').strip().lower()
+    if not a or not b:
+        return 0.0
+    # Boost exact or substring matches
+    if a == b:
+        return 1.0
+    if a in b or b in a:
+        return 0.85
+    return difflib.SequenceMatcher(None, a, b).ratio()
+
+
+def _summarize_course_for_search(course_uri: URIRef):
+    name = _first_literal(course_uri, SCHEMA.name)
+    url = _first_literal(course_uri, SCHEMA.url)
+    # Providers
+    providers = []
+    seen = set()
+    for pred in (SCHEMA.provider, COURSES.responsibleEntity):
+        for p in _rdf_graph.objects(course_uri, pred):
+            pid = str(p)
+            if pid in seen:
+                continue
+            seen.add(pid)
+            ptype = 'Organization' if ((p, RDF.type, SCHEMA.EducationalOrganization) in _rdf_graph or (p, RDF.type, SCHEMA.CollegeOrUniversity) in _rdf_graph) else ('Person' if (p, RDF.type, SCHEMA.Person) in _rdf_graph else None)
+            providers.append({
+                'uri': pid,
+                'name': _first_literal(p, SCHEMA.name) or pid,
+                'type': ptype
+            })
+
+    # Topics and levels
+    topics = []
+    level_counts = {}
+    theoretical_count = 0
+    practical_count = 0
+    for t in _rdf_graph.objects(course_uri, SCHEMA.teaches):
+        tname = _first_literal(t, SCHEMA.name) or str(t)
+        theoretical = _bool_value(t, COURSES.theoreticalTopic)
+        if theoretical is True:
+            theoretical_count += 1
+        elif theoretical is False:
+            practical_count += 1
+        level_raw = _get_level_value(t)
+        level_short = _short_level_label(level_raw) if level_raw else None
+        if level_short:
+            level_counts[level_short] = level_counts.get(level_short, 0) + 1
+        main = _bool_value(t, COURSES.mainTopic)
+        topics.append({'uri': str(t), 'name': tname, 'educationalLevel': level_short, 'theoretical': theoretical, 'main': main})
+
+    # Competencies related via skills
+    comp_seen = set()
+    comp_count = 0
+    competencies = []
+    for t in _rdf_graph.objects(course_uri, SCHEMA.teaches):
+        for s in _rdf_graph.subjects(EDUCOR.requiresKnowledge, t):
+            for c in _rdf_graph.objects(s, COURSES.competencyRequired):
+                cid = str(c)
+                if cid in comp_seen:
+                    continue
+                comp_seen.add(cid)
+                comp_count += 1
+        for s in _rdf_graph.subjects(SCHEMA.teaches, t):
+            for c in _rdf_graph.objects(s, COURSES.competencyRequired):
+                cid = str(c)
+                if cid in comp_seen:
+                    continue
+                comp_seen.add(cid)
+                comp_count += 1
+
+    # Build a small network graph (nodes/edges)
+    nodes = []
+    edges = []
+    nodes.append({'id': str(course_uri), 'label': name or 'Course', 'group': 'Course'})
+    # Providers
+    for p in providers[:6]:
+        nodes.append({'id': p['uri'], 'label': p['name'], 'group': p['type'] or 'Provider'})
+        edges.append({'from': str(course_uri), 'to': p['uri'], 'label': 'provider'})
+    # Topics
+    limited_topics = topics[:12]
+    included_topic_ids = {t['uri'] for t in limited_topics}
+    for t in limited_topics:
+        nodes.append({'id': t['uri'], 'label': t['name'], 'group': 'Topic'})
+        edges.append({'from': str(course_uri), 'to': t['uri'], 'label': 'teaches'})
+
+    # Competencies (limited)
+    added = 0
+    for t in _rdf_graph.objects(course_uri, SCHEMA.teaches):
+        if added >= 8:
+            break
+        # Only attach competencies for topics that are actually in the graph
+        t_id = str(t)
+        if t_id not in included_topic_ids:
+            continue
+        for s in _rdf_graph.subjects(EDUCOR.requiresKnowledge, t):
+            for c in _rdf_graph.objects(s, COURSES.competencyRequired):
+                cid = str(c)
+                cname = _first_literal(c, SCHEMA.name) or cid
+                if not any(n['id'] == cid for n in nodes):
+                    nodes.append({'id': cid, 'label': cname, 'group': 'Competency'})
+                edges.append({'from': t_id, 'to': cid, 'label': 'competency'})
+                added += 1
+                if not any(c['uri'] == cid for c in competencies):
+                    competencies.append({'uri': cid, 'name': cname})
+                if added >= 8:
+                    break
+            if added >= 8:
+                break
+
+    # Count competencies based on nodes included in the visualization to keep UI consistent
+    competencies_shown = sum(1 for n in nodes if n.get('group') == 'Competency')
+
+    summary = {
+        'topic_count': len(topics),
+        'theoretical_count': theoretical_count,
+        'practical_count': practical_count,
+        'levels': level_counts,
+        'competencies_count': competencies_shown,
+    }
+
+    return {
+        'uri': str(course_uri),
+        'name': name,
+        'url': url,
+        'providers': providers,
+        'topics': topics,
+        'summary': summary,
+        'graph': {'nodes': nodes, 'edges': edges},
+        'competencies': competencies,
+    }
+
+
+def search_similar_courses_rdf(title_query: str, description_query: str = None, limit: int = 10):
+    if not _rdf_graph:
+        return []
+    title_query = _text(title_query)
+    description_query = _text(description_query)
+    query = title_query if title_query else description_query
+    if not query:
+        return []
+
+    scored = []
+    for course in _rdf_graph.subjects(RDF.type, SCHEMA.Course):
+        name = _first_literal(course, SCHEMA.name) or ''
+        desc = _first_literal(course, SCHEMA.description) or ''
+        # score based on provided fields, prefer title match
+        score_title = _string_similarity(query, name) if title_query else 0.0
+        score_desc = _string_similarity(query, desc) if description_query and not title_query else 0.0
+        score = max(score_title, score_desc)
+        if score >= 0.4:  # basic threshold to filter noise
+            summary = _summarize_course_for_search(course)
+            summary['match'] = {
+                'title': name,
+                'description_present': bool(desc),
+                'score': round(score, 3)
+            }
+            scored.append(summary)
+
+    scored.sort(key=lambda x: x['match']['score'], reverse=True)
+    return scored[:limit]
+
+
 def init_neo4j_connection():
-    uri = "bolt://localhost:7687"
-    username = "neo4j"
-    password = "KG_edu_1"
-    driver = GraphDatabase.driver(uri, auth=(username, password))
+    # Read credentials from .env file (preferred). Do not prefer OS env vars per request.
+    uri = env_values.get('NEO4J_URI') or 'bolt://localhost:7687'
+    username = env_values.get('NEO4J_USER') or 'neo4j'
+    password = env_values.get('NEO4J_PASSWORD') or 'KG_edu_1'
+    # Use a short connection timeout so health checks fail fast if DB is unavailable
+    try:
+        driver = GraphDatabase.driver(uri, auth=(username, password), connection_timeout=3)
+    except TypeError:
+        # Older driver versions may not support connection_timeout; fall back gracefully
+        driver = GraphDatabase.driver(uri, auth=(username, password))
     return driver
 
-#Page configurations
-st.set_page_config(layout="wide")
+
+def find_empty_fields(facilitators, course_data, educational_resources, additional_resources):
+    empty_fields = []
+    for i, facilitator in enumerate(facilitators):
+        if not facilitator.get('name'):
+            empty_fields.append(f"Facilitator {i + 1} Name")
+        if not facilitator.get('affiliation'):
+            empty_fields.append(f"Facilitator {i + 1} Affiliation")
+        if not facilitator.get('email'):
+            empty_fields.append(f"Facilitator {i + 1} Email")
+        if not facilitator.get('roles'):
+            empty_fields.append(f"Facilitator {i + 1} Roles")
+
+    if not course_data.get('title'):
+        empty_fields.append("Course Title")
+    if not course_data.get('description'):
+        empty_fields.append("Course Description")
+    if not course_data.get('notional_hours'):
+        empty_fields.append("Notional Hours")
+    if not course_data.get('topics'):
+        empty_fields.append("Course Topics")
+    if not course_data.get('learning_outcomes'):
+        empty_fields.append("Course Learning Outcomes")
+    if not course_data.get('targeted_skills'):
+        empty_fields.append("Targeted Skills")
+
+    if not course_data.get('educational_level'):
+        empty_fields.append("Educational Level")
+    if not course_data.get('language'):
+        empty_fields.append("Language")
+    if not course_data.get('entry_requirements'):
+        empty_fields.append("Entry Requirements")
+    if not course_data.get('required_software'):
+        empty_fields.append("Required Software")
+
+    for i, resource in enumerate(educational_resources):
+        if not resource.get('title'):
+            empty_fields.append(f"Educational Resource {i + 1} Title")
+        if not resource.get('url'):
+            empty_fields.append(f"Educational Resource {i + 1} URL")
+        if not resource.get('type'):
+            empty_fields.append(f"Educational Resource {i + 1} Type")
+
+    for i, resource in enumerate(additional_resources):
+        if not resource.get('type'):
+            empty_fields.append(f"Additional Resource {i + 1} Type")
+        if not resource.get('url'):
+            empty_fields.append(f"Additional Resource {i + 1} URL")
+
+    return empty_fields
 
 
-def store_course_data(facilitators, course_data, educational_resources, additional_resources):
+def store_course_data(username, facilitators, course_data, educational_resources, additional_resources):
     driver = init_neo4j_connection()
     with driver.session() as session:
-        # Create or merge Course node with updated properties
-        session.run("""
+        # Create or merge Course node
+        session.run(
+            """
             MERGE (c:Course {title: $course_title})
             SET c.description = $course_description,
                 c.notional_hours = $notional_hours,
@@ -29,497 +502,387 @@ def store_course_data(facilitators, course_data, educational_resources, addition
                 c.language = $language,
                 c.entry_requirements = $entry_requirements,
                 c.required_software = $required_software
-            """, course_title=course_data['title'],
-            course_description=course_data['description'],
-            notional_hours=course_data['notional_hours'],
-            course_topics=course_data['topics'],
-            learning_outcomes=course_data['learning_outcomes'],
-            targeted_skills=course_data['targeted_skills'],
-            educational_level=course_data['educational_level'],
-            language=course_data['language'],
-            entry_requirements=course_data['entry_requirements'],
-            required_software=course_data['required_software'])
+            """,
+            course_title=course_data.get('title'),
+            course_description=course_data.get('description'),
+            notional_hours=course_data.get('notional_hours'),
+            course_topics=course_data.get('topics'),
+            learning_outcomes=course_data.get('learning_outcomes'),
+            targeted_skills=course_data.get('targeted_skills'),
+            educational_level=course_data.get('educational_level'),
+            language=course_data.get('language'),
+            entry_requirements=course_data.get('entry_requirements'),
+            required_software=course_data.get('required_software')
+        )
 
-        # Create or merge Facilitator nodes and connect them to the Course
+        # Link course to user who created it
+        if username:
+            session.run(
+                """
+                MATCH (u:User {username: $username}), (c:Course {title: $course_title})
+                MERGE (u)-[:CREATED]->(c)
+                """,
+                username=username,
+                course_title=course_data.get('title')
+            )
+
+        # Create facilitators and link
         for facilitator in facilitators:
-            session.run("""
+            session.run(
+                """
                 MERGE (f:Facilitator {name: $facilitator_name, affiliation: $affiliation, email: $email})
                 SET f.roles = $roles
                 MERGE (c:Course {title: $course_title})
                 MERGE (f)-[:FACILITATES]->(c)
-                """, facilitator_name=facilitator['name'], affiliation=facilitator['affiliation'],
-                email=facilitator['email'], roles=facilitator['roles'],
-                course_title=course_data['title'])
+                """,
+                facilitator_name=facilitator.get('name'),
+                affiliation=facilitator.get('affiliation'),
+                email=facilitator.get('email'),
+                roles=facilitator.get('roles'),
+                course_title=course_data.get('title')
+            )
 
-        # Create Educational Resource nodes and connect each to the Course
+        # Educational resources
         for resource in educational_resources:
-            session.run("""
+            session.run(
+                """
                 MERGE (e:EducationalResource {title: $resource_title, url: $resource_url})
                 SET e.type = $resource_type
                 MERGE (c:Course {title: $course_title})
                 MERGE (c)-[:INCLUDES_RESOURCE]->(e)
-                """, resource_title=resource['title'],
-                resource_url=resource['url'],
-                resource_type=resource['type'],
-                course_title=course_data['title'])
+                """,
+                resource_title=resource.get('title'),
+                resource_url=resource.get('url'),
+                resource_type=resource.get('type'),
+                course_title=course_data.get('title')
+            )
 
-        # Create Additional Resource nodes and connect each to the Course
-        for i, resource in enumerate(additional_resources):
-            session.run("""
+        # Additional resources
+        for resource in additional_resources:
+            session.run(
+                """
                 MERGE (a:AdditionalResource {url: $additional_url})
                 SET a.type = $additional_type
                 MERGE (c:Course {title: $course_title})
                 MERGE (c)-[:HAS_ADDITIONAL_RESOURCE]->(a)
-                """, additional_url=resource['url'],
-                additional_type=resource['type'],
-                course_title=course_data['title'])
+                """,
+                additional_url=resource.get('url'),
+                additional_type=resource.get('type'),
+                course_title=course_data.get('title')
+            )
 
     driver.close()
-
-
-def facilitator_form(index):
-    st.subheader(f"Facilitator {index + 1}")
-    col1, col2 = st.columns(2)
-    with col1:
-        facilitator_name = st.text_input(f"Facilitator {index + 1} Name")
-        facilitator_email = st.text_input(f"Facilitator {index + 1} Email")
-    with col2:
-        affiliation = st.text_input(f"Facilitator {index + 1} Affiliation")
-        roles = st.multiselect(f"Facilitator {index + 1} Roles", ["Tutor", "Teaching Assistant", "Contact Person"])
-    return {"name": facilitator_name, "affiliation": affiliation, "email": facilitator_email, "roles": roles}
-
-
-def find_empty_fields(facilitators, course_data, educational_resources, additional_resources):
-    empty_fields = []
-
-    # Check each facilitator field
-    for i, facilitator in enumerate(facilitators):
-        if not facilitator['name']:
-            empty_fields.append(f"Facilitator {i + 1} Name")
-        if not facilitator['affiliation']:
-            empty_fields.append(f"Facilitator {i + 1} Affiliation")
-        if not facilitator['email']:
-            empty_fields.append(f"Facilitator {i + 1} Email")
-        if not facilitator['roles']:
-            empty_fields.append(f"Facilitator {i + 1} Roles")
-
-    # Check course data fields
-    if not course_data['title']:
-        empty_fields.append("Course Title")
-    if not course_data['description']:
-        empty_fields.append("Course Description")
-    if not course_data['notional_hours']:
-        empty_fields.append("Notional Hours")
-    if not course_data['topics']:
-        empty_fields.append("Course Topics")
-    if not course_data['learning_outcomes']:
-        empty_fields.append("Course Learning Outcomes")
-    if not course_data['targeted_skills']:
-        empty_fields.append("Targeted Skills")
-
-    # Check target audience fields
-    if not course_data['educational_level']:
-        empty_fields.append("Educational Level")
-    if not course_data['language']:
-        empty_fields.append("Language")
-    if not course_data['entry_requirements']:
-        empty_fields.append("Entry Requirements")
-    if not course_data['required_software']:
-        empty_fields.append("Required Software")
-
-    # Check each educational resource field
-    for i, resource in enumerate(educational_resources):
-        if not resource['title']:
-            empty_fields.append(f"Educational Resource {i + 1} Title")
-        if not resource['url']:
-            empty_fields.append(f"Educational Resource {i + 1} URL")
-        if not resource['type']:
-            empty_fields.append(f"Educational Resource {i + 1} Type")
-
-    # Check each additional resource field
-    for i, resource in enumerate(additional_resources):
-        if not resource['type']:
-            empty_fields.append(f"Additional Resource {i + 1} Type")
-        if not resource['url']:
-            empty_fields.append(f"Additional Resource {i + 1} URL")
-
-    return empty_fields
 
 
 def search_similar_courses(course_title):
     driver = init_neo4j_connection()
     with driver.session() as session:
-        results = session.run("""
-                    MATCH (c:Course)
-                    WHERE c.title CONTAINS $course_title
-                    OPTIONAL MATCH (c)-[:FACILITATES]-(f:Facilitator)
-                    OPTIONAL MATCH (c)-[:INCLUDES_RESOURCE]->(e:EducationalResource)
-                    RETURN c.title AS course_title,
-                           c.course_topics AS course_topics,
-                           COLLECT(DISTINCT f.name) AS facilitators,
-                           c.educational_level AS educational_level,
-                           c.language AS language,
-                           COLLECT(DISTINCT {title: e.title, url: e.url}) AS educational_resources
-                    """, course_title=course_title)
+        results = session.run(
+            """
+            MATCH (c:Course)
+            WHERE c.title CONTAINS $course_title
+            OPTIONAL MATCH (c)-[:FACILITATES]-(f:Facilitator)
+            OPTIONAL MATCH (c)-[:INCLUDES_RESOURCE]->(e:EducationalResource)
+            RETURN c.title AS course_title,
+                   c.course_topics AS course_topics,
+                   COLLECT(DISTINCT f.name) AS facilitators,
+                   c.educational_level AS educational_level,
+                   c.language AS language,
+                   COLLECT(DISTINCT {title: e.title, url: e.url}) AS educational_resources
+            """,
+            course_title=course_title
+        )
 
-        return [{"course_title": record["course_title"],
-                 "course_topics": record["course_topics"],
-                 "facilitators": record["facilitators"],
-                 "educational_level": record["educational_level"],
-                 "language": record["language"],
-                 "educational_resources": [{"title": er["title"], "url": er["url"]} for er in
-                                           record["educational_resources"]]}
-                for record in results]
-    driver.close()
+        out = []
+        for record in results:
+            out.append({
+                'course_title': record['course_title'],
+                'course_topics': record['course_topics'],
+                'facilitators': record['facilitators'],
+                'educational_level': record['educational_level'],
+                'language': record['language'],
+                'educational_resources': [ {'title': er['title'], 'url': er['url']} for er in record['educational_resources'] if er and er.get('title')]
+            })
+        driver.close()
+        return out
 
 
-# search for complementary educational resources
 def find_complementary_content(course_title, existing_resources_titles):
     driver = init_neo4j_connection()
     with driver.session() as session:
-        results = session.run("""
+        results = session.run(
+            """
             MATCH (c:Course)-[:INCLUDES_RESOURCE]->(e:EducationalResource)
             WHERE c.title CONTAINS $course_title AND NOT e.title IN $existing_resources_titles
             RETURN DISTINCT e.title AS title, e.url AS url
-            """, course_title=course_title, existing_resources_titles=existing_resources_titles)
+            """,
+            course_title=course_title,
+            existing_resources_titles=existing_resources_titles
+        )
 
-        return [{"Title": record["title"], "URL": record["url"]} for record in results]
+        out = [ {'Title': r['title'], 'URL': r['url']} for r in results ]
+        driver.close()
+        return out
+
+
+def get_user(username):
+    driver = init_neo4j_connection()
+    with driver.session() as session:
+        res = session.run("MATCH (u:User {username: $username}) RETURN u.username AS username, u.email AS email", username=username)
+        rec = res.single()
+    driver.close()
+    return rec
+
+
+def create_user(username, email, password_plain):
+    password_hash = generate_password_hash(password_plain)
+    driver = init_neo4j_connection()
+    with driver.session() as session:
+        session.run("MERGE (u:User {username: $username}) SET u.email = $email, u.password_hash = $password_hash",
+                    username=username, email=email, password_hash=password_hash)
     driver.close()
 
 
-tabs = st.tabs(["Home", "About the Interface", "Licensing Information", "Course Examples"])
+def verify_user(username, password_plain):
+    driver = init_neo4j_connection()
+    with driver.session() as session:
+        res = session.run("MATCH (u:User {username: $username}) RETURN u.password_hash AS pw", username=username)
+        rec = res.single()
+    driver.close()
+    if rec and rec.get('pw'):
+        return check_password_hash(rec['pw'], password_plain)
+    return False
 
 
-# App layout
-def main():
-    # Tab 1: Home tab
-    with tabs[0]:
-        st.sidebar.title("What would you like to do?")
-        pages = ["Add New Course", "Create Your Course", "Complete Your Existing Course"]
-        selection = st.sidebar.radio("Go to", pages)
+def login_required(func):
+    from functools import wraps
 
-        if selection == "Add New Course":
-            add_new_course()
-        elif selection == "Create Your Course":
-            create_your_course()
-        elif selection == "Complete Your Existing Course":
-            complete_your_course()
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if 'username' not in session:
+            flash('Please log in to access this page', 'warning')
+            return redirect(url_for('login'))
+        return func(*args, **kwargs)
 
-    # Tab 2: About the Interface
-    with tabs[1]:
-        st.header("About the Interface")
-        st.write("""
-            This interface is designed to help users create and manage course data, 
-            search for similar courses, and find complementary educational resources. 
-            Each section offers tools for navigating the course data structure and adding new content with ease.
-            """)
-
-    # Tab 3: Licensing Information
-    with tabs[2]:
-        st.header("Licensing Information")
-        st.write("""
-            The interface and the associated code are licensed under the [MIT License](https://opensource.org/licenses/MIT). 
-            The data provided within the interface may be subject to additional licensing terms.
-            Please consult the documentation for further details.
-            """)
-
-    # Tab 4: Course Examples
-    with tabs[3]:
-        st.header("Course Examples")
-        st.write("""
-            Here are some example courses to help you understand how to structure and add course data:
-            - **Data Science 101**: An introductory course to data science covering basic statistics, data manipulation, and machine learning.
-            - **Web Development Bootcamp**: A complete course on front-end and back-end web development, using HTML, CSS, JavaScript, and Python.
-            - **Advanced Machine Learning**: Focuses on deep learning models, neural networks, and advanced ML techniques.
-            """)
+    return wrapper
 
 
-# Page 1: Add New Course
-def add_new_course():
-    st.title("Add New Course")
-    st.divider()
-
-    # Facilitator info
-    st.header("Facilitator Info")
-    facilitators = []
-    num_facilitators = st.number_input("Number of Facilitators", min_value=1, step=1, value=1)
-
-    for i in range(num_facilitators):
-        facilitator_data = facilitator_form(i)
-        facilitators.append(facilitator_data)
-
-    st.divider()
-
-    # Course Data
-    st.header("Course Data")
-    col1, col2 = st.columns(2)
-    with col1:
-        course_title = st.text_input("Course Title")
-        course_description = st.text_area("Course Description")
-        course_topics = st.text_area("Course Topics")
-    with col2:
-        notional_hours = st.text_input("Notional Hours")
-        learning_outcomes = st.text_area("Course Learning Outcomes")
-        targeted_skills = st.text_area("Targeted Skills")
-
-    course_data = {
-        "title": course_title,
-        "description": course_description,
-        "notional_hours": notional_hours,
-        "topics": course_topics,
-        "learning_outcomes": learning_outcomes,
-        "targeted_skills": targeted_skills
-    }
-
-    st.divider()
-
-    # Target Audience
-    st.header("Target Audience")
-    col1, col2 = st.columns(2)
-    with col1:
-        educational_level = st.multiselect("Educational Level", ["Undergraduate", "Graduate", "Postgraduate"])
-        entry_requirements = st.text_area("Entry Requirements")
-    with col2:
-        language = st.multiselect("Language", ["English", "Spanish", "German", "French", "Other"])
-        required_software = st.text_area("Required Software")
-
-    course_data.update({
-        "educational_level": educational_level,
-        "language": language,
-        "entry_requirements": entry_requirements,
-        "required_software": required_software
-    })
-
-    st.divider()
-
-    # Course Educational Resources Section
-    st.header("Course Educational Resources")
-    num_resources = st.number_input("Number of Educational Resources", min_value=1, step=1)
-
-    educational_resources = []
-    for i in range(1, num_resources + 1):
-        st.subheader(f"Educational Resource {i} Data")
-        col1, col2 = st.columns(2)
-        with col1:
-            resource_title = st.text_input(f"Educational Resource {i} Title")
-            resource_url = st.text_input(f"Educational Resource {i} URL")
-        with col2:
-            resource_type = st.multiselect(
-                f"Educational Resource {i} Type",
-                ["Learning Content", "Assessment", "Dataset"]
-            )
-        educational_resources.append({
-            "title": resource_title,
-            "url": resource_url,
-            "type": resource_type
-        })
-
-    # Additional Resources Section
-    st.subheader("Additional Resources")
-    num_additional_resources = st.number_input("Number of Additional Resources", min_value=1, step=1)
-
-    additional_resources = []
-    for i in range(1, num_additional_resources + 1):
-        st.subheader(f"Additional Resource {i}")
-        col1, col2 = st.columns(2)
-        with col1:
-            resource_type = st.multiselect(
-                f"Type (Additional Resource {i})",
-                ["External Link", "Dataset", "Social Media", "OER"],
-                key=f"additional_resource_type_{i}"
-            )
-        with col2:
-            resource_url = st.text_input(f"URL (Additional Resource {i})", key=f"additional_resource_url_{i}")
-
-        additional_resources.append({
-            "type": resource_type,
-            "url": resource_url
-        })
+@app.route('/')
+def index():
+    return render_template('index.html', user=session.get('username'))
 
 
-    if "confirm_submission" not in st.session_state:
-        st.session_state.confirm_submission = False
+@app.context_processor
+def inject_current_year():
+    return {'current_year': datetime.now(timezone.utc).year}
 
-    # Submit button
-    if st.button("Submit"):
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@app.route('/licensing')
+def licensing():
+    return render_template('licensing.html')
+
+
+@app.route('/examples')
+def examples():
+    return render_template('examples.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        if not username or not password:
+            flash('Username and password required', 'danger')
+            return redirect(url_for('register'))
+        create_user(username, email, password)
+        flash('Registration complete. Please log in.', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if verify_user(username, password):
+            session['username'] = username
+            flash('Logged in successfully', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid credentials', 'danger')
+            return redirect(url_for('login'))
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    flash('Logged out', 'info')
+    return redirect(url_for('index'))
+
+
+@app.route('/add_course', methods=['GET', 'POST'])
+@login_required
+def add_course():
+    if request.method == 'POST':
+        # parse form data
+        username = session.get('username')
+        # Facilitators: we expect repeated fields facilitator_name_0..n
+        facilitators = []
+        i = 0
+        while True:
+            name = request.form.get(f'facilitator_name_{i}')
+            if not name:
+                break
+            facilitators.append({
+                'name': name,
+                'affiliation': request.form.get(f'facilitator_affiliation_{i}'),
+                'email': request.form.get(f'facilitator_email_{i}'),
+                'roles': request.form.getlist(f'facilitator_roles_{i}')
+            })
+            i += 1
+
+        course_data = {
+            'title': request.form.get('course_title'),
+            'description': request.form.get('course_description'),
+            'notional_hours': request.form.get('notional_hours'),
+            'topics': request.form.get('course_topics'),
+            'learning_outcomes': request.form.get('learning_outcomes'),
+            'targeted_skills': request.form.get('targeted_skills'),
+            'educational_level': request.form.getlist('educational_level'),
+            'language': request.form.getlist('language'),
+            'entry_requirements': request.form.get('entry_requirements'),
+            'required_software': request.form.get('required_software')
+        }
+
+        educational_resources = []
+        j = 0
+        while True:
+            title = request.form.get(f'resource_title_{j}')
+            if not title:
+                break
+            educational_resources.append({'title': title, 'url': request.form.get(f'resource_url_{j}'), 'type': request.form.getlist(f'resource_type_{j}')})
+            j += 1
+
+        additional_resources = []
+        k = 0
+        while True:
+            url = request.form.get(f'additional_url_{k}')
+            if not url:
+                break
+            additional_resources.append({'url': url, 'type': request.form.getlist(f'additional_type_{k}')})
+            k += 1
+
         empty_fields = find_empty_fields(facilitators, course_data, educational_resources, additional_resources)
-
         if empty_fields:
-            # Show a warning with a list of all empty fields
-            st.warning("The following fields are empty: \n- " + "\n- ".join(empty_fields))
-            st.session_state.confirm_submission = True
+            flash('Missing fields: ' + ', '.join(empty_fields), 'warning')
+        # store regardless of empties for now but link to user
+        store_course_data(username, facilitators, course_data, educational_resources, additional_resources)
+        flash('Course stored', 'success')
+        return redirect(url_for('add_course'))
 
+    return render_template('add_course.html')
+
+
+@app.route('/create_course', methods=['GET', 'POST'])
+def create_course():
+    results = None
+    graph_data = None
+    if request.method == 'POST':
+        course_title = request.form.get('course_title')
+        course_description = request.form.get('course_description')
+        results = search_similar_courses_rdf(course_title, course_description)
+        if not results:
+            flash('No similar courses found in the knowledge graph', 'info')
         else:
-            # If no fields are empty, directly store the data
-            store_course_data(facilitators, course_data, educational_resources, additional_resources)
-            st.success("Course data submitted successfully!")
-            st.session_state.confirm_submission = False
-
-    # Check if the user has confirmed submission with missing fields
-    if st.session_state.confirm_submission:
-        if st.button("Confirm Submission"):
-            # Store the course data even with empty fields confirmed
-            store_course_data(facilitators, course_data, educational_resources, additional_resources)
-            st.success("Course data submitted successfully!")
-            st.session_state.confirm_submission = False
+            # Prepare combined graph for the top result by default
+            graph_data = results[0]['graph']
+    return render_template('create_course.html', results=results, graph_data=graph_data)
 
 
-# Page 2: Create Your Course
-def create_your_course():
-    st.title("Create Your Course")
-    st.divider()
-    # Course Data Section
-    st.header("Course Data")
-    col1, col2 = st.columns(2)
-    with col1:
-        course_title = st.text_input("Course Title")
-        course_description = st.text_area("Course Description")
-
-        course_topics = st.text_area("Course Topics")
-    with col2:
-        notional_hours = st.text_input("Notional Hours")
-        learning_outcomes = st.text_area("Course Learning Outcomes")
-        targeted_skills = st.text_area("Targeted Skills")
-
-    course_data = {
-        "title": course_title,
-        "description": course_description,
-        "notional_hours": notional_hours,
-        "topics": course_topics,
-        "learning_outcomes": learning_outcomes,
-        "targeted_skills": targeted_skills
-    }
-
-    st.divider()
-
-    # Target Audience Section
-    st.header("Target Audience")
-    col1, col2 = st.columns(2)
-    with col1:
-        educational_level = st.multiselect("Educational Level", ["Undergraduate", "Graduate", "Postgraduate"])
-        entry_requirements = st.text_area("Entry Requirements")
-    with col2:
-        language = st.multiselect("Language", ["English", "Spanish", "German", "French", "Other"])
-        required_software = st.text_area("Required Software")
-
-    course_data.update({
-        "educational_level": educational_level,
-        "language": language,
-        "entry_requirements": entry_requirements,
-        "required_software": required_software
-    })
-
-    if st.button("Search Similar Courses"):
-        # Check for empty fields and display warning if any
-        empty_fields = find_empty_fields([], course_data, [], [])
-        if empty_fields:
-            st.info("You might consider adding some important missing information. The empty fields are: \n- " + "\n- ".join(empty_fields))
-
-        # Proceed with the search regardless of empty fields
-        similar_courses = search_similar_courses(course_title)
-        if similar_courses:
-            st.subheader("Similar Courses Found")
-
-            # Prepare data for DataFrame
-            course_table = []
-            for course in similar_courses:
-                resources = "; ".join([f"{er['title']} ({er['url']})" for er in course["educational_resources"]])
-                course_table.append({
-                    "Course Title": course["course_title"],
-                    "Course Topics": course["course_topics"],
-                    "Facilitators": ", ".join(course["facilitators"]),
-                    "Educational Level": course["educational_level"],
-                    "Language": course["language"],
-                    "Educational Resources": resources
-                })
-
-            # Convert to DataFrame and display with full width
-            course_df = pd.DataFrame(course_table)
-            st.dataframe(course_df, use_container_width=True)
-        else:
-            st.warning("No similar courses found.")
+@app.route('/complete_course', methods=['GET', 'POST'])
+def complete_course_route():
+    complementary = None
+    if request.method == 'POST':
+        course_title = request.form.get('course_title')
+        existing_titles = request.form.getlist('existing_titles')
+        complementary = find_complementary_content(course_title, existing_titles)
+        if not complementary:
+            flash('No complementary educational resources found', 'info')
+    return render_template('complete_course.html', complementary=complementary)
 
 
-# Page 3: Complete Your Existing Course
-def complete_your_course():
-    st.title("Complete Your Existing Course")
-    st.divider()
-    # Course Data Section
-    st.header("Course Data")
-    col1, col2 = st.columns(2)
-    with col1:
-        course_title = st.text_input("Course Title")
-        course_description = st.text_area("Course Description")
-        course_topics = st.text_area("Course Topics")
-    with col2:
-        notional_hours = st.text_input("Notional Hours")
-        learning_outcomes = st.text_area("Course Learning Outcomes")
-        targeted_skills = st.text_area("Targeted Skills")
+# New routes to expose RDF-backed course retrieval
+@app.route('/courses')
+def courses():
+    courses = list_courses_from_rdf()
+    return render_template('courses.html', courses=courses)
 
-    course_data = {
-        "title": course_title,
-        "description": course_description,
-        "notional_hours": notional_hours,
-        "topics": course_topics,
-        "learning_outcomes": learning_outcomes,
-        "targeted_skills": targeted_skills
-    }
 
-    st.divider()
-
-    # Target Audience Section
-    st.header("Target Audience")
-    col1, col2 = st.columns(2)
-    with col1:
-        educational_level = st.multiselect("Educational Level", ["Undergraduate", "Graduate", "Postgraduate"])
-        entry_requirements = st.text_area("Entry Requirements")
-    with col2:
-        language = st.multiselect("Language", ["English", "Spanish", "German", "French", "Other"])
-        required_software = st.text_area("Required Software")
-
-    course_data.update({
-        "educational_level": educational_level,
-        "language": language,
-        "entry_requirements": entry_requirements,
-        "required_software": required_software
-    })
-
-    st.divider()
-
-    # Course Educational Resources Section
-    st.header("Course Educational Resources")
-    num_resources = st.number_input("Number of Educational Resources", min_value=1, step=1)
-
-    educational_resources = []
-    for i in range(1, num_resources + 1):
-        st.subheader(f"Educational Resource {i}")
-        col1, col2 = st.columns(2)
-        with col1:
-            resource_title = st.text_input(f"Title (Resource {i})")
-            resource_url = st.text_input(f"URL (Resource {i})")
-        with col2:
-            resource_type = st.multiselect(f"Type (Resource {i})", ["Learning Content", "Assessment", "Dataset"])
-
-        educational_resources.append({
-            "title": resource_title,
-            "url": resource_url,
-            "type": resource_type
-        })
-
-    # Extract titles of existing educational resources for exclusion in the search
-    existing_resources_titles = [resource["title"] for resource in educational_resources]
-
-    # Find Complementary Content button
-    if st.button("Find Complementary Content"):
-        complementary_content = find_complementary_content(course_title, existing_resources_titles)
-        if complementary_content:
-            # Display complementary resources in a DataFrame table
-            st.subheader("Complementary Educational Resources Found")
-            content_df = pd.DataFrame(complementary_content)
-            st.dataframe(content_df, use_container_width=True) 
-        else:
-            st.info("No complementary educational resources found.")
+@app.route('/courses/<path:course_id>')
+def course_detail(course_id):
+    detail = course_detail_from_rdf(course_id)
+    if not detail:
+        flash('Course not found in knowledge graph', 'warning')
+        return redirect(url_for('courses'))
+    return render_template('course_detail.html', course=detail)
 
 
 if __name__ == '__main__':
-    main()
+    app.run(debug=True)
+
+
+# Lightweight health check endpoint
+@app.route('/health')
+def health():
+    # RDF status
+    rdf_file_exists = os.path.exists(RDF_FILE)
+    triple_count = 0
+    course_count = 0
+    if _rdf_graph is not None:
+        try:
+            triple_count = len(_rdf_graph)
+            course_count = sum(1 for _ in _rdf_graph.subjects(RDF.type, SCHEMA.Course))
+        except Exception:
+            triple_count = -1
+
+    # Neo4j status
+    neo4j = {
+        'uri': env_values.get('NEO4J_URI') or 'bolt://localhost:7687',
+        'connected': False
+    }
+    try:
+        driver = init_neo4j_connection()
+        try:
+            # Verify connectivity if supported
+            if hasattr(driver, 'verify_connectivity'):
+                driver.verify_connectivity()
+                neo4j['connected'] = True
+            else:
+                # Fallback: run a trivial query
+                with driver.session() as session:
+                    session.run("RETURN 1 AS ok").single()
+                neo4j['connected'] = True
+        finally:
+            driver.close()
+    except Exception:
+        neo4j['connected'] = False
+
+    return jsonify({
+        'status': 'ok' if rdf_file_exists else 'degraded',
+        'rdf': {
+            'file': RDF_FILE,
+            'file_exists': rdf_file_exists,
+            'triple_count': triple_count,
+            'course_count': course_count
+        },
+        'neo4j': neo4j
+    })

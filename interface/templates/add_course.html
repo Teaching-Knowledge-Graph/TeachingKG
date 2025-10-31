@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2 class="mb-3">Add New Course</h2>
+  <form method="post">
+    <div class="form-section mb-3">
+      <div class="accordion" id="courseAccordion">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">Facilitators</button>
+          </h2>
+          <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#courseAccordion">
+            <div class="accordion-body">
+              {% for i in range(3) %}
+                <div class="row mb-2">
+                  <div class="col-md-4">
+                    <input class="form-control" placeholder="Name" name="facilitator_name_{{ i }}">
+                  </div>
+                  <div class="col-md-4">
+                    <input class="form-control" placeholder="Affiliation" name="facilitator_affiliation_{{ i }}">
+                  </div>
+                  <div class="col-md-4">
+                    <input class="form-control" placeholder="Email" name="facilitator_email_{{ i }}">
+                  </div>
+                  <div class="col-md-12 mt-1">
+                    <select multiple class="form-select" name="facilitator_roles_{{ i }}">
+                      <option value="Tutor">Tutor</option>
+                      <option value="Teaching Assistant">Teaching Assistant</option>
+                      <option value="Contact Person">Contact Person</option>
+                    </select>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingTwo">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">Course Data</button>
+          </h2>
+          <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#courseAccordion">
+            <div class="accordion-body">
+              <div class="mb-3"><input class="form-control" name="course_title" placeholder="Course Title"></div>
+              <div class="mb-3"><textarea class="form-control" name="course_description" placeholder="Course Description"></textarea></div>
+              <div class="row"><div class="col-md-4 mb-3"><input class="form-control" name="notional_hours" placeholder="Notional Hours"></div>
+              <div class="col-md-8 mb-3"><input class="form-control" name="course_topics" placeholder="Course Topics"></div></div>
+              <div class="mb-3"><textarea class="form-control" name="learning_outcomes" placeholder="Course Learning Outcomes"></textarea></div>
+              <div class="mb-3"><textarea class="form-control" name="targeted_skills" placeholder="Targeted Skills"></textarea></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingThree">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">Target Audience & Resources</button>
+          </h2>
+          <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#courseAccordion">
+            <div class="accordion-body">
+              <div class="mb-3">
+                <select multiple class="form-select" name="educational_level">
+                  <option>Undergraduate</option>
+                  <option>Graduate</option>
+                  <option>Postgraduate</option>
+                </select>
+              </div>
+              <div class="mb-3"><textarea class="form-control" name="entry_requirements" placeholder="Entry Requirements"></textarea></div>
+              <div class="mb-3">
+                <select multiple class="form-select" name="language">
+                  <option>English</option>
+                  <option>Spanish</option>
+                  <option>German</option>
+                  <option>French</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="mb-3"><textarea class="form-control" name="required_software" placeholder="Required Software"></textarea></div>
+
+              <h6 class="mt-3">Educational Resources</h6>
+              {% for j in range(3) %}
+                <div class="row mb-2">
+                  <div class="col-md-6"><input class="form-control" name="resource_title_{{ j }}" placeholder="Resource Title"></div>
+                  <div class="col-md-6"><input class="form-control" name="resource_url_{{ j }}" placeholder="Resource URL"></div>
+                  <div class="col-md-12 mt-1">
+                    <select multiple class="form-select" name="resource_type_{{ j }}">
+                      <option>Learning Content</option>
+                      <option>Assessment</option>
+                      <option>Dataset</option>
+                    </select>
+                  </div>
+                </div>
+              {% endfor %}
+
+              <h6 class="mt-3">Additional Resources</h6>
+              {% for k in range(3) %}
+                <div class="row mb-2">
+                  <div class="col-md-6"><select multiple class="form-select" name="additional_type_{{ k }}">
+                    <option>External Link</option>
+                    <option>Dataset</option>
+                    <option>Social Media</option>
+                    <option>OER</option>
+                  </select></div>
+                  <div class="col-md-6"><input class="form-control" name="additional_url_{{ k }}" placeholder="URL"></div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end"><button class="btn btn-success" type="submit">Submit</button></div>
+  </form>
+{% endblock %}

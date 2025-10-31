@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 m-0">Courses from Knowledge Graph</h1>
+  <span class="text-muted">{{ courses|length }} found</span>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Providers</th>
+        <th scope="col" class="text-center">Topics</th>
+        <th scope="col">Link</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in courses %}
+      <tr>
+        <td>
+          <div class="fw-semibold">{{ c.name or c.uri }}</div>
+          {% if c.url %}
+            <div><a href="{{ c.url }}" target="_blank" class="small link-secondary">{{ c.url }}</a></div>
+          {% endif %}
+        </td>
+        <td>
+          {% if c.providers and c.providers|length > 0 %}
+            <ul class="list-unstyled m-0">
+              {% for p in c.providers %}
+                <li>{{ p.name }}{% if p.type %} <span class="badge bg-light text-dark border ms-1">{{ p.type }}</span>{% endif %}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <span class="text-muted">–</span>
+          {% endif %}
+        </td>
+        <td class="text-center">{{ c.topic_count }}</td>
+        <td>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('course_detail', course_id=c.uri) }}">
+            View details
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

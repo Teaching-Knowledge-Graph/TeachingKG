@@ -1,1 +1,27 @@
 .DS_Store
+
+# Interface app: ignore secrets, local envs, and build/cache artifacts
+interface/.env
+interface/.env.*
+interface/.venv/
+interface/venv/
+interface/__pycache__/
+interface/**/*.pyc
+interface/.pytest_cache/
+interface/.ipynb_checkpoints/
+interface/.vscode/
+interface/.idea/
+interface/.mypy_cache/
+interface/.coverage*
+interface/coverage/
+interface/instance/
+interface/*.sqlite3
+interface/*.db
+interface/node_modules/
+interface/dist/
+interface/build/
+
+# Common OS/editor junk
+Thumbs.db
+*.swp
+*.swo
