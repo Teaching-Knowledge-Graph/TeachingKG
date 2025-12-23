@@ -263,7 +263,7 @@
                     <rdf:Description rdf:about="http://www.w3.org/2004/02/skos/core#Concept"/>
                     <owl:Restriction>
                         <owl:onProperty rdf:resource="http://www.w3.org/2004/02/skos/core#inScheme"/>
-                        <owl:hasValue rdf:resource="https://w3id.org/coursesonto/kos/educational-type"/>
+                        <owl:hasValue rdf:resource="https://w3id.org/def/courses/kos/educational-type"/>
                     </owl:Restriction>
                 </owl:intersectionOf>
             </owl:Class>
@@ -646,6 +646,13 @@
     
 
 
+    <!-- http://www.w3.org/2004/02/skos/core#ConceptScheme -->
+
+
+    <owl:Class rdf:about="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
+    
+
+
     <!-- https://github.com/tibonto/educor#EducationalResource -->
 
 
@@ -806,10 +813,12 @@
     
 
 
-    <!-- https://w3id.org/coursesonto/kos/educational-type -->
+    <!-- https://w3id.org/def/courses/kos/educational-type -->
 
 
-    <owl:NamedIndividual rdf:about="https://w3id.org/coursesonto/kos/educational-type"/>
+    <owl:NamedIndividual rdf:about="https://w3id.org/def/courses/kos/educational-type">
+        <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
+    </owl:NamedIndividual>
 </rdf:RDF>
 
 
