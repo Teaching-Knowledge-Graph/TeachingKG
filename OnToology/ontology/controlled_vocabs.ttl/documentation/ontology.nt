@@ -1,0 +1,89 @@
+_:genid1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
+# 
+# 
+# #################################################################
+# #
+# #    Annotation properties
+# #
+# #################################################################
+# 
+# 
+# http://purl.org/dc/terms/creator
+<http://purl.org/dc/terms/creator> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#AnnotationProperty> .
+# 
+# http://purl.org/dc/terms/title
+<http://purl.org/dc/terms/title> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#AnnotationProperty> .
+# 
+# http://www.w3.org/2004/02/skos/core#definition
+<http://www.w3.org/2004/02/skos/core#definition> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#AnnotationProperty> .
+# 
+# http://www.w3.org/2004/02/skos/core#hasTopConcept
+<http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#AnnotationProperty> .
+# 
+# http://www.w3.org/2004/02/skos/core#inScheme
+<http://www.w3.org/2004/02/skos/core#inScheme> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#AnnotationProperty> .
+# 
+# http://www.w3.org/2004/02/skos/core#notation
+<http://www.w3.org/2004/02/skos/core#notation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#AnnotationProperty> .
+# 
+# http://www.w3.org/2004/02/skos/core#prefLabel
+<http://www.w3.org/2004/02/skos/core#prefLabel> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#AnnotationProperty> .
+# 
+# 
+# 
+# #################################################################
+# #
+# #    Classes
+# #
+# #################################################################
+# 
+# 
+# http://www.w3.org/2004/02/skos/core#Concept
+<http://www.w3.org/2004/02/skos/core#Concept> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+# 
+# http://www.w3.org/2004/02/skos/core#ConceptScheme
+<http://www.w3.org/2004/02/skos/core#ConceptScheme> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+# 
+# 
+# 
+# #################################################################
+# #
+# #    Individuals
+# #
+# #################################################################
+# 
+# 
+# https://w3id.org/coursesonto/kos/educational-type/mix
+<https://w3id.org/coursesonto/kos/educational-type/mix> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> .
+<https://w3id.org/coursesonto/kos/educational-type/mix> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://w3id.org/coursesonto/kos/educational-type/mix> <http://www.w3.org/2004/02/skos/core#inScheme> <https://w3id.org/def/courses/kos/educational-type> .
+<https://w3id.org/coursesonto/kos/educational-type/mix> <http://www.w3.org/2004/02/skos/core#notation> "mix" .
+<https://w3id.org/coursesonto/kos/educational-type/mix> <http://www.w3.org/2004/02/skos/core#prefLabel> "mix" .
+# 
+# https://w3id.org/coursesonto/kos/educational-type/practice
+<https://w3id.org/coursesonto/kos/educational-type/practice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> .
+<https://w3id.org/coursesonto/kos/educational-type/practice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://w3id.org/coursesonto/kos/educational-type/practice> <http://www.w3.org/2004/02/skos/core#inScheme> <https://w3id.org/def/courses/kos/educational-type> .
+<https://w3id.org/coursesonto/kos/educational-type/practice> <http://www.w3.org/2004/02/skos/core#notation> "practice" .
+<https://w3id.org/coursesonto/kos/educational-type/practice> <http://www.w3.org/2004/02/skos/core#prefLabel> "practice" .
+# 
+# https://w3id.org/coursesonto/kos/educational-type/theory
+<https://w3id.org/coursesonto/kos/educational-type/theory> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> .
+<https://w3id.org/coursesonto/kos/educational-type/theory> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#Concept> .
+<https://w3id.org/coursesonto/kos/educational-type/theory> <http://www.w3.org/2004/02/skos/core#inScheme> <https://w3id.org/def/courses/kos/educational-type> .
+<https://w3id.org/coursesonto/kos/educational-type/theory> <http://www.w3.org/2004/02/skos/core#notation> "theory" .
+<https://w3id.org/coursesonto/kos/educational-type/theory> <http://www.w3.org/2004/02/skos/core#prefLabel> "theory" .
+# 
+# https://w3id.org/def/courses/kos/educational-type
+<https://w3id.org/def/courses/kos/educational-type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> .
+<https://w3id.org/def/courses/kos/educational-type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+<https://w3id.org/def/courses/kos/educational-type> <http://purl.org/dc/terms/creator> <https://davidchavesfraga.com> .
+<https://w3id.org/def/courses/kos/educational-type> <http://purl.org/dc/terms/title> "Types of educational resources" .
+<https://w3id.org/def/courses/kos/educational-type> <http://www.w3.org/2004/02/skos/core#definition> "Type of educational resources" .
+<https://w3id.org/def/courses/kos/educational-type> <http://www.w3.org/2004/02/skos/core#hasTopConcept> <https://w3id.org/coursesonto/kos/educational-type/mix> .
+<https://w3id.org/def/courses/kos/educational-type> <http://www.w3.org/2004/02/skos/core#hasTopConcept> <https://w3id.org/coursesonto/kos/educational-type/practice> .
+<https://w3id.org/def/courses/kos/educational-type> <http://www.w3.org/2004/02/skos/core#hasTopConcept> <https://w3id.org/coursesonto/kos/educational-type/theory> .
+<https://w3id.org/def/courses/kos/educational-type> <http://www.w3.org/2004/02/skos/core#notation> "resource_type" .
+<https://w3id.org/def/courses/kos/educational-type> <http://www.w3.org/2004/02/skos/core#prefLabel> "Type of educational resources" .
+# 
+# Generated by the OWL API (version 5.1.18) https://github.com/owlcs/owlapi/

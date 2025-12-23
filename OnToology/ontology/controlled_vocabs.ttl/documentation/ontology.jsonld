@@ -1,0 +1,104 @@
+[ {
+  "@id" : "_:genid1",
+  "@type" : [ "http://www.w3.org/2002/07/owl#Ontology" ]
+}, {
+  "@id" : "http://purl.org/dc/terms/creator",
+  "@type" : [ "http://www.w3.org/2002/07/owl#AnnotationProperty" ]
+}, {
+  "@id" : "http://purl.org/dc/terms/title",
+  "@type" : [ "http://www.w3.org/2002/07/owl#AnnotationProperty" ]
+}, {
+  "@id" : "http://www.w3.org/2004/02/skos/core#Concept",
+  "@type" : [ "http://www.w3.org/2002/07/owl#Class" ]
+}, {
+  "@id" : "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+  "@type" : [ "http://www.w3.org/2002/07/owl#Class" ]
+}, {
+  "@id" : "http://www.w3.org/2004/02/skos/core#definition",
+  "@type" : [ "http://www.w3.org/2002/07/owl#AnnotationProperty" ]
+}, {
+  "@id" : "http://www.w3.org/2004/02/skos/core#hasTopConcept",
+  "@type" : [ "http://www.w3.org/2002/07/owl#AnnotationProperty" ]
+}, {
+  "@id" : "http://www.w3.org/2004/02/skos/core#inScheme",
+  "@type" : [ "http://www.w3.org/2002/07/owl#AnnotationProperty" ]
+}, {
+  "@id" : "http://www.w3.org/2004/02/skos/core#notation",
+  "@type" : [ "http://www.w3.org/2002/07/owl#AnnotationProperty" ]
+}, {
+  "@id" : "http://www.w3.org/2004/02/skos/core#prefLabel",
+  "@type" : [ "http://www.w3.org/2002/07/owl#AnnotationProperty" ]
+}, {
+  "@id" : "https://w3id.org/coursesonto/kos/educational-type/mix",
+  "@type" : [ "http://www.w3.org/2002/07/owl#NamedIndividual" ],
+  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" : [ {
+    "@id" : "http://www.w3.org/2004/02/skos/core#Concept"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#inScheme" : [ {
+    "@id" : "https://w3id.org/def/courses/kos/educational-type"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#notation" : [ {
+    "@value" : "mix"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#prefLabel" : [ {
+    "@value" : "mix"
+  } ]
+}, {
+  "@id" : "https://w3id.org/coursesonto/kos/educational-type/practice",
+  "@type" : [ "http://www.w3.org/2002/07/owl#NamedIndividual" ],
+  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" : [ {
+    "@id" : "http://www.w3.org/2004/02/skos/core#Concept"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#inScheme" : [ {
+    "@id" : "https://w3id.org/def/courses/kos/educational-type"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#notation" : [ {
+    "@value" : "practice"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#prefLabel" : [ {
+    "@value" : "practice"
+  } ]
+}, {
+  "@id" : "https://w3id.org/coursesonto/kos/educational-type/theory",
+  "@type" : [ "http://www.w3.org/2002/07/owl#NamedIndividual" ],
+  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" : [ {
+    "@id" : "http://www.w3.org/2004/02/skos/core#Concept"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#inScheme" : [ {
+    "@id" : "https://w3id.org/def/courses/kos/educational-type"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#notation" : [ {
+    "@value" : "theory"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#prefLabel" : [ {
+    "@value" : "theory"
+  } ]
+}, {
+  "@id" : "https://w3id.org/def/courses/kos/educational-type",
+  "@type" : [ "http://www.w3.org/2002/07/owl#NamedIndividual" ],
+  "http://purl.org/dc/terms/creator" : [ {
+    "@id" : "https://davidchavesfraga.com"
+  } ],
+  "http://purl.org/dc/terms/title" : [ {
+    "@value" : "Types of educational resources"
+  } ],
+  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" : [ {
+    "@id" : "http://www.w3.org/2004/02/skos/core#ConceptScheme"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#definition" : [ {
+    "@value" : "Type of educational resources"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#hasTopConcept" : [ {
+    "@id" : "https://w3id.org/coursesonto/kos/educational-type/mix"
+  }, {
+    "@id" : "https://w3id.org/coursesonto/kos/educational-type/practice"
+  }, {
+    "@id" : "https://w3id.org/coursesonto/kos/educational-type/theory"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#notation" : [ {
+    "@value" : "resource_type"
+  } ],
+  "http://www.w3.org/2004/02/skos/core#prefLabel" : [ {
+    "@value" : "Type of educational resources"
+  } ]
+} ]

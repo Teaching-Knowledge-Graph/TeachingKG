@@ -1,0 +1,169 @@
+{
+  "_comment" : "Created with OWL2VOWL (version 0.3.5), http://vowl.visualdataweb.org",
+  "header" : {
+    "languages" : [ "undefined" ],
+    "baseIris" : [ "http://www.w3.org/2000/01/rdf-schema", "http://www.w3.org/2001/XMLSchema", "http://www.w3.org/2004/02/skos/core" ],
+    "iri" : "No IRI set"
+  },
+  "namespace" : [ ],
+  "class" : [ {
+    "id" : "0",
+    "type" : "owl:Class"
+  }, {
+    "id" : "1",
+    "type" : "owl:Class"
+  } ],
+  "classAttribute" : [ {
+    "iri" : "http://www.w3.org/2004/02/skos/core#ConceptScheme",
+    "baseIri" : "http://www.w3.org/2004/02/skos/core",
+    "instances" : 0,
+    "label" : {
+      "IRI-based" : "ConceptScheme"
+    },
+    "individuals" : [ {
+      "iri" : "https://w3id.org/def/courses/kos/educational-type",
+      "baseIri" : "https://w3id.org/def/courses/kos",
+      "annotations" : {
+        "creator" : [ {
+          "identifier" : "creator",
+          "language" : "undefined",
+          "value" : "https://davidchavesfraga.com",
+          "type" : "iri"
+        } ],
+        "notation" : [ {
+          "identifier" : "notation",
+          "language" : "undefined",
+          "value" : "resource_type",
+          "type" : "label"
+        } ],
+        "prefLabel" : [ {
+          "identifier" : "prefLabel",
+          "language" : "undefined",
+          "value" : "Type of educational resources",
+          "type" : "label"
+        } ],
+        "hasTopConcept" : [ {
+          "identifier" : "hasTopConcept",
+          "language" : "undefined",
+          "value" : "https://w3id.org/coursesonto/kos/educational-type/practice",
+          "type" : "iri"
+        }, {
+          "identifier" : "hasTopConcept",
+          "language" : "undefined",
+          "value" : "https://w3id.org/coursesonto/kos/educational-type/mix",
+          "type" : "iri"
+        }, {
+          "identifier" : "hasTopConcept",
+          "language" : "undefined",
+          "value" : "https://w3id.org/coursesonto/kos/educational-type/theory",
+          "type" : "iri"
+        } ],
+        "definition" : [ {
+          "identifier" : "definition",
+          "language" : "undefined",
+          "value" : "Type of educational resources",
+          "type" : "label"
+        } ],
+        "title" : [ {
+          "identifier" : "title",
+          "language" : "undefined",
+          "value" : "Types of educational resources",
+          "type" : "label"
+        } ]
+      },
+      "labels" : {
+        "IRI-based" : "educational-type"
+      }
+    } ],
+    "attributes" : [ "external" ],
+    "id" : "0"
+  }, {
+    "iri" : "http://www.w3.org/2004/02/skos/core#Concept",
+    "baseIri" : "http://www.w3.org/2004/02/skos/core",
+    "instances" : 0,
+    "label" : {
+      "IRI-based" : "Concept"
+    },
+    "individuals" : [ {
+      "iri" : "https://w3id.org/coursesonto/kos/educational-type/theory",
+      "baseIri" : "https://w3id.org/coursesonto/kos/educational-type",
+      "annotations" : {
+        "inScheme" : [ {
+          "identifier" : "inScheme",
+          "language" : "undefined",
+          "value" : "https://w3id.org/def/courses/kos/educational-type",
+          "type" : "iri"
+        } ],
+        "notation" : [ {
+          "identifier" : "notation",
+          "language" : "undefined",
+          "value" : "theory",
+          "type" : "label"
+        } ],
+        "prefLabel" : [ {
+          "identifier" : "prefLabel",
+          "language" : "undefined",
+          "value" : "theory",
+          "type" : "label"
+        } ]
+      },
+      "labels" : {
+        "IRI-based" : "theory"
+      }
+    }, {
+      "iri" : "https://w3id.org/coursesonto/kos/educational-type/practice",
+      "baseIri" : "https://w3id.org/coursesonto/kos/educational-type",
+      "annotations" : {
+        "inScheme" : [ {
+          "identifier" : "inScheme",
+          "language" : "undefined",
+          "value" : "https://w3id.org/def/courses/kos/educational-type",
+          "type" : "iri"
+        } ],
+        "notation" : [ {
+          "identifier" : "notation",
+          "language" : "undefined",
+          "value" : "practice",
+          "type" : "label"
+        } ],
+        "prefLabel" : [ {
+          "identifier" : "prefLabel",
+          "language" : "undefined",
+          "value" : "practice",
+          "type" : "label"
+        } ]
+      },
+      "labels" : {
+        "IRI-based" : "practice"
+      }
+    }, {
+      "iri" : "https://w3id.org/coursesonto/kos/educational-type/mix",
+      "baseIri" : "https://w3id.org/coursesonto/kos/educational-type",
+      "annotations" : {
+        "inScheme" : [ {
+          "identifier" : "inScheme",
+          "language" : "undefined",
+          "value" : "https://w3id.org/def/courses/kos/educational-type",
+          "type" : "iri"
+        } ],
+        "notation" : [ {
+          "identifier" : "notation",
+          "language" : "undefined",
+          "value" : "mix",
+          "type" : "label"
+        } ],
+        "prefLabel" : [ {
+          "identifier" : "prefLabel",
+          "language" : "undefined",
+          "value" : "mix",
+          "type" : "label"
+        } ]
+      },
+      "labels" : {
+        "IRI-based" : "mix"
+      }
+    } ],
+    "attributes" : [ "external" ],
+    "id" : "1"
+  } ]
+}
