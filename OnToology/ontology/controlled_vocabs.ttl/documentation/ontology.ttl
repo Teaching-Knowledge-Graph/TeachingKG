@@ -3,94 +3,35 @@
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@base <http://www.w3.org/2002/07/owl#> .
-
-[ rdf:type owl:Ontology
- ] .
-
-#################################################################
-#    Annotation properties
-#################################################################
-
-###  http://purl.org/dc/terms/creator
-<http://purl.org/dc/terms/creator> rdf:type owl:AnnotationProperty .
+@prefix omv: <http://omv.ontoware.org/2007/07/OWLChanges>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix cc: <http://creativecommons.org/ns#>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
+@prefix vann: <http://purl.org/vocab/vann/>.
+@prefix edutype: <https://w3id.org/coursesonto/kos/educational-type/> .
 
 
-###  http://purl.org/dc/terms/title
-<http://purl.org/dc/terms/title> rdf:type owl:AnnotationProperty .
+
+<https://w3id.org/def/courses/kos/educational-type> a skos:ConceptScheme; 
+	skos:definition "Type of educational resources"; 
+ 	skos:hasTopConcept edutype:theory, edutype:practice, edutype:mix; 
+	skos:notation "resource_type";
+	skos:prefLabel "Type of educational resources" ;
+    dc:title "Types of educational resources" ;
+	dc:creator <https://davidchavesfraga.com> ; .
 
 
-###  http://www.w3.org/2004/02/skos/core#definition
-<http://www.w3.org/2004/02/skos/core#definition> rdf:type owl:AnnotationProperty .
+edutype:theory a skos:Concept; 
+ 	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
+ 	skos:notation "theory"; 
+ 	skos:prefLabel "theory" .
 
+edutype:mix a skos:Concept; 
+ 	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
+ 	skos:notation "mix"; 
+ 	skos:prefLabel "mix" .
 
-###  http://www.w3.org/2004/02/skos/core#hasTopConcept
-<http://www.w3.org/2004/02/skos/core#hasTopConcept> rdf:type owl:AnnotationProperty .
-
-
-###  http://www.w3.org/2004/02/skos/core#inScheme
-<http://www.w3.org/2004/02/skos/core#inScheme> rdf:type owl:AnnotationProperty .
-
-
-###  http://www.w3.org/2004/02/skos/core#notation
-<http://www.w3.org/2004/02/skos/core#notation> rdf:type owl:AnnotationProperty .
-
-
-###  http://www.w3.org/2004/02/skos/core#prefLabel
-<http://www.w3.org/2004/02/skos/core#prefLabel> rdf:type owl:AnnotationProperty .
-
-
-#################################################################
-#    Classes
-#################################################################
-
-###  http://www.w3.org/2004/02/skos/core#Concept
-<http://www.w3.org/2004/02/skos/core#Concept> rdf:type owl:Class .
-
-
-###  http://www.w3.org/2004/02/skos/core#ConceptScheme
-<http://www.w3.org/2004/02/skos/core#ConceptScheme> rdf:type owl:Class .
-
-
-#################################################################
-#    Individuals
-#################################################################
-
-###  https://w3id.org/coursesonto/kos/educational-type/mix
-<https://w3id.org/coursesonto/kos/educational-type/mix> rdf:type owl:NamedIndividual ,
-                                                                 <http://www.w3.org/2004/02/skos/core#Concept> ;
-                                                        <http://www.w3.org/2004/02/skos/core#inScheme> <https://w3id.org/def/courses/kos/educational-type> ;
-                                                        <http://www.w3.org/2004/02/skos/core#notation> "mix" ;
-                                                        <http://www.w3.org/2004/02/skos/core#prefLabel> "mix" .
-
-
-###  https://w3id.org/coursesonto/kos/educational-type/practice
-<https://w3id.org/coursesonto/kos/educational-type/practice> rdf:type owl:NamedIndividual ,
-                                                                      <http://www.w3.org/2004/02/skos/core#Concept> ;
-                                                             <http://www.w3.org/2004/02/skos/core#inScheme> <https://w3id.org/def/courses/kos/educational-type> ;
-                                                             <http://www.w3.org/2004/02/skos/core#notation> "practice" ;
-                                                             <http://www.w3.org/2004/02/skos/core#prefLabel> "practice" .
-
-
-###  https://w3id.org/coursesonto/kos/educational-type/theory
-<https://w3id.org/coursesonto/kos/educational-type/theory> rdf:type owl:NamedIndividual ,
-                                                                    <http://www.w3.org/2004/02/skos/core#Concept> ;
-                                                           <http://www.w3.org/2004/02/skos/core#inScheme> <https://w3id.org/def/courses/kos/educational-type> ;
-                                                           <http://www.w3.org/2004/02/skos/core#notation> "theory" ;
-                                                           <http://www.w3.org/2004/02/skos/core#prefLabel> "theory" .
-
-
-###  https://w3id.org/def/courses/kos/educational-type
-<https://w3id.org/def/courses/kos/educational-type> rdf:type owl:NamedIndividual ,
-                                                             <http://www.w3.org/2004/02/skos/core#ConceptScheme> ;
-                                                    <http://purl.org/dc/terms/creator> <https://davidchavesfraga.com> ;
-                                                    <http://purl.org/dc/terms/title> "Types of educational resources" ;
-                                                    <http://www.w3.org/2004/02/skos/core#definition> "Type of educational resources" ;
-                                                    <http://www.w3.org/2004/02/skos/core#hasTopConcept> <https://w3id.org/coursesonto/kos/educational-type/mix> ,
-                                                                                                        <https://w3id.org/coursesonto/kos/educational-type/practice> ,
-                                                                                                        <https://w3id.org/coursesonto/kos/educational-type/theory> ;
-                                                    <http://www.w3.org/2004/02/skos/core#notation> "resource_type" ;
-                                                    <http://www.w3.org/2004/02/skos/core#prefLabel> "Type of educational resources" .
-
-
-###  Generated by the OWL API (version 5.1.18) https://github.com/owlcs/owlapi/
+edutype:practice a skos:Concept; 
+ 	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
+ 	skos:notation "practice"; 
+ 	skos:prefLabel "practice" .

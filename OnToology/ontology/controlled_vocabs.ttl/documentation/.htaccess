@@ -38,7 +38,7 @@ RewriteRule ^$ ontology.nt [R=303,L]
 RewriteCond %{HTTP_ACCEPT} text/turtle [OR]
 RewriteCond %{HTTP_ACCEPT} text/\* [OR]
 RewriteCond %{HTTP_ACCEPT} \*/turtle 
-RewriteRule ^$ controlled_vocabs.ttl [R=303,L]
+RewriteRule ^$ ontology.ttl [R=303,L]
 
 RewriteCond %{HTTP_ACCEPT} .+
 RewriteRule ^$ 406.html [R=406,L]
