@@ -21,7 +21,6 @@
 	dc:creator <https://davidchavesfraga.com> ; .
 
 
-
 edutype:theory a skos:Concept; 
  	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
  	skos:notation "theory"; 
