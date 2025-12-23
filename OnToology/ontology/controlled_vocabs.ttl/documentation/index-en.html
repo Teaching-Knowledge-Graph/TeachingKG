@@ -1,37 +1,136 @@
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix xml: <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix omv: <http://omv.ontoware.org/2007/07/OWLChanges>.
-@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
-@prefix cc: <http://creativecommons.org/ns#>.
-@prefix dcterms: <http://purl.org/dc/terms/>.
-@prefix vann: <http://purl.org/vocab/vann/>.
-@prefix edutype: <https://w3id.org/coursesonto/kos/educational-type/> .
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Types of educational resources (SKOS)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; line-height: 1.5; color: #111; }
+    .container { max-width: 980px; margin: 0 auto; }
+    header { border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    h1 { font-size: 1.8rem; margin: 0 0 .25rem 0; }
+    .muted { color: #4b5563; }
+    code, pre { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; }
+    code { padding: 0 .25rem; }
+    pre { padding: 1rem; overflow: auto; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+    @media (min-width: 860px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem; background: #fff; }
+    .card h2 { font-size: 1.1rem; margin: 0 0 .5rem 0; }
+    .kv { display: grid; grid-template-columns: 180px 1fr; gap: .25rem .75rem; font-size: .95rem; }
+    .kv div { padding: .1rem 0; }
+    .tag { display: inline-block; font-size: .8rem; padding: .15rem .5rem; border-radius: 999px; border: 1px solid #e5e7eb; background: #f9fafb; margin-right: .4rem; }
+    a { color: #0b5bd3; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; font-size: .9rem; }
+    .concepts { margin: 0; padding-left: 1.2rem; }
+  </style>
 
+  <!-- Machine-readable JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": {
+      "skos": "http://www.w3.org/2004/02/skos/core#",
+      "dcterms": "http://purl.org/dc/terms/",
+      "edutype": "https://w3id.org/courses-kos/educational-type/"
+    },
+    "@id": "https://w3id.org/def/courses-kos/educational-type",
+    "@type": "skos:ConceptScheme",
+    "skos:prefLabel": "Type of educational resources",
+    "skos:definition": "Type of educational resources",
+    "skos:notation": "resource_type",
+    "dcterms:title": "Types of educational resources",
+    "dcterms:creator": { "@id": "https://davidchavesfraga.com" },
+    "skos:hasTopConcept": [
+      { "@id": "edutype:theory", "@type": "skos:Concept", "skos:prefLabel": "theory", "skos:notation": "theory",
+        "skos:inScheme": { "@id": "https://w3id.org/def/courses-kos/educational-type" } },
+      { "@id": "edutype:practice", "@type": "skos:Concept", "skos:prefLabel": "practice", "skos:notation": "practice",
+        "skos:inScheme": { "@id": "https://w3id.org/def/courses-kos/educational-type" } },
+      { "@id": "edutype:mix", "@type": "skos:Concept", "skos:prefLabel": "mix", "skos:notation": "mix",
+        "skos:inScheme": { "@id": "https://w3id.org/def/courses-kos/educational-type" } }
+    ]
+  }
+  </script>
+</head>
 
+<body>
+  <div class="container">
+    <header>
+      <h1>Types of educational resources</h1>
+      <div class="muted">
+        SKOS Concept Scheme ·
+        URI: <a href="https://w3id.org/def/courses-kos/educational-type">https://w3id.org/def/courses-kos/educational-type</a>
+      </div>
+      <div style="margin-top:.75rem;">
+        <span class="tag">skos:ConceptScheme</span>
+        <span class="tag">notation: resource_type</span>
+      </div>
+    </header>
 
-<https://w3id.org/def/courses/kos/educational-type> a skos:ConceptScheme; 
-	skos:definition "Type of educational resources"; 
- 	skos:hasTopConcept edutype:theory, edutype:practice, edutype:mix; 
-	skos:notation "resource_type";
-	skos:prefLabel "Type of educational resources" ;
-    dc:title "Types of educational resources" ;
-	dc:creator <https://davidchavesfraga.com> ; .
+    <section class="grid">
+      <div class="card">
+        <h2>Scheme metadata</h2>
+        <div class="kv">
+          <div class="muted">prefLabel</div><div>Type of educational resources</div>
+          <div class="muted">definition</div><div>Type of educational resources</div>
+          <div class="muted">notation</div><div><code>resource_type</code></div>
+          <div class="muted">title</div><div>Types of educational resources</div>
+          <div class="muted">creator</div><div><a href="https://davidchavesfraga.com">https://davidchavesfraga.com</a></div>
+        </div>
+      </div>
 
+      <div class="card">
+        <h2>Top concepts</h2>
+        <ul class="concepts">
+          <li>
+            <strong>theory</strong> (<code>edutype:theory</code>) —
+            <a href="https://w3id.org/courses-kos/educational-type/theory">https://w3id.org/courses-kos/educational-type/theory</a>
+          </li>
+          <li>
+            <strong>practice</strong> (<code>edutype:practice</code>) —
+            <a href="https://w3id.org/courses-kos/educational-type/practice">https://w3id.org/courses-kos/educational-type/practice</a>
+          </li>
+          <li>
+            <strong>mix</strong> (<code>edutype:mix</code>) —
+            <a href="https://w3id.org/courses-kos/educational-type/mix">https://w3id.org/courses-kos/educational-type/mix</a>
+          </li>
+        </ul>
+      </div>
+    </section>
 
-edutype:theory a skos:Concept; 
- 	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
- 	skos:notation "theory"; 
- 	skos:prefLabel "theory" .
+    <section class="card" style="margin-top:1rem;">
+      <h2>RDF (Turtle)</h2>
+      <pre>@prefix skos: &lt;http://www.w3.org/2004/02/skos/core#&gt; .
+@prefix dcterms: &lt;http://purl.org/dc/terms/&gt; .
+@prefix edutype: &lt;https://w3id.org/courses-kos/educational-type/&gt; .
 
-edutype:mix a skos:Concept; 
- 	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
- 	skos:notation "mix"; 
- 	skos:prefLabel "mix" .
+&lt;https://w3id.org/def/courses-kos/educational-type&gt; a skos:ConceptScheme ;
+  skos:definition "Type of educational resources" ;
+  skos:hasTopConcept edutype:theory, edutype:practice, edutype:mix ;
+  skos:notation "resource_type" ;
+  skos:prefLabel "Type of educational resources" ;
+  dcterms:title "Types of educational resources" ;
+  dcterms:creator &lt;https://davidchavesfraga.com&gt; .
 
-edutype:practice a skos:Concept; 
- 	skos:inScheme <https://w3id.org/def/courses/kos/educational-type>; 
- 	skos:notation "practice"; 
- 	skos:prefLabel "practice" .
+edutype:theory a skos:Concept ;
+  skos:inScheme &lt;https://w3id.org/def/courses-kos/educational-type&gt; ;
+  skos:notation "theory" ;
+  skos:prefLabel "theory" .
+
+edutype:mix a skos:Concept ;
+  skos:inScheme &lt;https://w3id.org/def/courses-kos/educational-type&gt; ;
+  skos:notation "mix" ;
+  skos:prefLabel "mix" .
+
+edutype:practice a skos:Concept ;
+  skos:inScheme &lt;https://w3id.org/def/courses-kos/educational-type&gt; ;
+  skos:notation "practice" ;
+  skos:prefLabel "practice" .</pre>
+    </section>
+
+    <footer class="muted">
+      Documentation page for the SKOS concept scheme <code>educational-type</code>.
+    </footer>
+  </div>
+</body>
+</html>
