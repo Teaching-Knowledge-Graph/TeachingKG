@@ -1,0 +1,33 @@
+{% extends 'base_minimal.html' %}
+
+{% block content %}
+  {% set search_intro_html %}
+    <div class="text-muted" style="max-width:72ch;">
+      <p class="mb-2">
+        For this test, you are creating a university course about knowledge graphs. The goal is to explore the interface and get hands-on experience building a course.
+      </p>
+      <ul class="mb-2 ps-3">
+        <li>The test is completely anonymized and stored only in your browser.</li>
+        <li>Downloading the course saves a file locally on your computer.</li>
+        <li>Once you finish creating the course, please proceed to the <strong>survey</strong></li>
+      </ul>
+    </div>
+  {% endset %}
+
+  {% with
+    form_action=url_for('create_course_test'),
+    storage_key='tk_builder_state_test',
+    enable_selection=True,
+    builder_enabled=True,
+    search_card_title='Test Use-case',
+    search_intro_html=search_intro_html,
+    search_button_label='Start creating your course',
+    course_title_label='Give your Course as Title',
+    course_title_placeholder='e.g., Semantic Web',
+    survey_url='https://tib.eu/umfragen/index.php/163293',
+    survey_button_label='Go to Survey',
+    page_id='test'
+  %}
+    {% include 'partials/course_authoring_bundle.html' %}
+  {% endwith %}
+{% endblock %}

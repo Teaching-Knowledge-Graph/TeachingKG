@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  {% set search_intro_html %}
+    <p class="text-muted mb-2" style="max-width:72ch;">
+      Start by exploring similar courses inside the knowledge graph. Select the topics and skills you want to reuse, then continue refining your own course with the builder below.
+    </p>
+  {% endset %}
+
+  {% with
+    form_action=url_for('create_course'),
+    storage_key='tk_builder_state_create',
+    enable_selection=True,
+    builder_enabled=True,
+    search_card_title='Create Your Course',
+    search_intro_html=search_intro_html,
+    search_button_label='Search Similar Courses',
+    course_title_label='Course Title',
+    course_title_placeholder='e.g., Introduction to Knowledge Graphs',
+    results=results,
+    graph_data=graph_data,
+    show_builder=show_builder,
+    initial_title=initial_title,
+    page_id='create'
+  %}
+    {% include 'partials/course_authoring_bundle.html' %}
+  {% endwith %}
+{% endblock %}

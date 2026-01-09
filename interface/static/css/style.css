@@ -1,0 +1,60 @@
+/* Custom styles for TeachingKG */
+:root{
+  --brand: #2a9d8f; /* accent */
+}
+body{
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: #f7fbfb;
+}
+.navbar-brand .bi{ color: #fff; }
+.hero {
+  padding: 3.5rem 1.5rem;
+  background: linear-gradient(90deg, rgba(42,157,143,0.08), rgba(59,130,246,0.03));
+  border-radius: .5rem;
+  box-shadow: 0 6px 18px rgba(22,28,36,0.04);
+}
+.feature-card{ transition: transform .18s ease, box-shadow .18s ease; }
+.feature-card:hover{ transform: translateY(-6px); box-shadow: 0 12px 30px rgba(22,28,36,0.08); }
+.card { border: 0; }
+.form-section { padding: 1rem; background: #fff; border-radius: .5rem; box-shadow: 0 6px 18px rgba(22,28,36,0.03); }
+footer{ background: transparent; }
+.table thead th{ background: rgba(0,0,0,0.03); }
+.center-card{ max-width:520px; margin: 2rem auto; }
+.muted-small{ color: #6c757d; font-size: .9rem; }
+
+/* responsive tweaks */
+@media (max-width: 767px){
+  .hero{ padding: 2rem 1rem; }
+}
+
+/* Create page: slightly denser table and smaller fonts for more info per screen */
+.create-page{
+  /* Expand create page content to use more horizontal space by neutralizing container side padding */
+  margin-left: calc(-1 * var(--bs-gutter-x));
+  margin-right: calc(-1 * var(--bs-gutter-x));
+}
+.create-page #resultsTable{
+  font-size: 0.92rem;
+}
+.create-page #resultsTable td,
+.create-page #resultsTable th{
+  white-space: normal;
+  word-break: break-word;
+  padding: .45rem .55rem;
+}
+.create-page .badge{
+  font-size: .75rem;
+}
+.create-page .card-title{ margin-bottom: .35rem; }
+.create-page #graphContainer{ height: 500px; }
+
+/* Course detail page: make topics table a bit denser */
+.course-detail-page .table{
+  font-size: 0.94rem;
+}
+.course-detail-page .table th,
+.course-detail-page .table td{
+  padding: .45rem .55rem;
+  white-space: normal;
+  word-break: break-word;
+}

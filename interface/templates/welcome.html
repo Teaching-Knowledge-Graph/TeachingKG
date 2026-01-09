@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="center-card" style="max-width: 780px;">
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <div class="text-center mb-3">
+        <h1 class="h3 mb-1">Welcome</h1>
+        <div class="text-muted">Choose how you'd like to explore TeachingKG</div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="card feature-card h-100 border-primary">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title"><i class="bi bi-flag text-primary me-2"></i>Test Use-Case</h5>
+              <p class="card-text muted-small">ISWC test scenario using the Create page only.</p>
+              <a class="btn btn-primary mt-auto" href="{{ url_for('create_course_test') }}">Go to Test Use-Case</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card feature-card h-100">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title"><i class="bi bi-grid text-primary me-2"></i>Full System</h5>
+              <p class="card-text muted-small">Home page with all tabs and features.</p>
+              <a class="btn btn-outline-primary mt-auto" href="{{ url_for('home') }}">Open Full System</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card feature-card h-100">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title"><i class="bi bi-card-checklist text-primary me-2"></i>Survey</h5>
+              <p class="card-text muted-small">Share feedback to improve the experience.</p>
+              <a class="btn btn-outline-secondary mt-auto" href="https://tib.eu/umfragen/index.php/163293" target="_blank" rel="noopener">Go to Survey</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

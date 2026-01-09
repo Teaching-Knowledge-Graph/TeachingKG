@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block content %}
+  {% set search_intro_html %}
+    <p class="text-muted mb-3" style="max-width:72ch;">
+      Discover how similar offerings are structured in the knowledge graph, review their topic and skills coverage, and use the insights to shape your own curriculum.
+    </p>
+  {% endset %}
+
+  <div class="mb-5">
+    {% with
+      form_action=url_for('courses'),
+      storage_key='tk_courses_search_state',
+      enable_selection=False,
+      builder_enabled=False,
+      search_card_title='Explore Courses in the KG',
+      search_intro_html=search_intro_html,
+      search_button_label='Search Knowledge Graph',
+      course_title_label='Course Title',
+      course_title_placeholder='e.g., Semantic Web',
+      results=results,
+      graph_data=graph_data,
+      initial_title=initial_title,
+      page_id='courses'
+    %}
+      {% include 'partials/course_authoring_bundle.html' %}
+    {% endwith %}
+  </div>
+
+  {% set total_topics = courses|sum(attribute='topic_count') %}
+  {% set total_skills = courses|sum(attribute='skills_count') %}
+
+  <div class="row g-3 align-items-stretch mb-4">
+    <div class="col-sm-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-uppercase small text-muted">Courses in catalog</div>
+            <div class="fs-4 fw-semibold">{{ courses|length }}</div>
+          </div>
+          <i class="bi bi-collection-play text-primary fs-1"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-uppercase small text-muted">Total topics covered</div>
+            <div class="fs-4 fw-semibold">{{ total_topics }}</div>
+          </div>
+          <i class="bi bi-diagram-3 text-success fs-1"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-uppercase small text-muted">Total skills listed</div>
+            <div class="fs-4 fw-semibold">{{ total_skills }}</div>
+          </div>
+          <i class="bi bi-lightbulb text-warning fs-1"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="h5 mb-0">Knowledge Graph Catalog</h2>
+        <div class="text-muted small">Expand any row to inspect topics, skills, and resource links.</div>
+      </div>
+      <span class="badge rounded-pill text-bg-primary">{{ courses|length }} total</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Course</th>
+            <th scope="col" class="text-center">Topics</th>
+            <th scope="col" class="text-center">Skills</th>
+            <th scope="col" class="text-end">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in courses %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ c.name or c.uri }}</div>
+              {% if c.url %}
+                <div><a href="{{ c.url }}" target="_blank" class="small link-secondary">{{ c.url }}</a></div>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <span class="badge rounded-pill text-bg-secondary">{{ c.topic_count }}</span>
+            </td>
+            <td class="text-center">
+              <span class="badge rounded-pill text-bg-secondary">{{ c.skills_count }}</span>
+            </td>
+            <td class="text-end">
+              <button
+                class="btn btn-sm btn-outline-primary collapsed course-toggle"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#details-{{ loop.index }}"
+                aria-expanded="false"
+                aria-controls="details-{{ loop.index }}"
+                data-uri="{{ c.uri }}">
+                <i class="bi bi-chevron-right me-1 collapse-indicator-collapsed"></i>
+                <i class="bi bi-chevron-down me-1 collapse-indicator-expanded" style="display:none;"></i>
+                View details
+              </button>
+            </td>
+          </tr>
+          <tr class="collapse course-detail-collapse" id="details-{{ loop.index }}" data-uri="{{ c.uri }}">
+            <td colspan="4" class="p-0">
+              <div class="details-container p-4 border-top bg-body-tertiary">
+                <div class="text-muted small d-flex align-items-center">
+                  <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+                  Loading details…
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Lazy-load details fragment when a collapse is shown. Also toggle chevron icons.
+    document.addEventListener('DOMContentLoaded', function () {
+      const collapses = document.querySelectorAll('.course-detail-collapse');
+      collapses.forEach(function (el) {
+        el.addEventListener('show.bs.collapse', function () {
+          if (el.getAttribute('data-loaded') === '1') return;
+          const uri = el.getAttribute('data-uri');
+          const container = el.querySelector('.details-container');
+          container.innerHTML = '<div class="text-muted small d-flex align-items-center"><div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>Loading details…</div>';
+          fetch(`/courses/details?id=${encodeURIComponent(uri)}`)
+            .then(r => { if (!r.ok) throw new Error('Failed to load'); return r.text(); })
+            .then(html => {
+              container.innerHTML = html;
+              el.setAttribute('data-loaded', '1');
+            })
+            .catch(err => {
+              container.innerHTML = '<div class="alert alert-warning mb-0">Unable to load details. Please try again.</div>';
+            });
+        });
+      });
+
+      document.querySelectorAll('.course-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          setTimeout(function(){
+            const nowCollapsed = btn.classList.contains('collapsed');
+            const right = btn.querySelector('.collapse-indicator-collapsed');
+            const down = btn.querySelector('.collapse-indicator-expanded');
+            if (nowCollapsed) {
+              if (right) right.style.display = '';
+              if (down) down.style.display = 'none';
+            } else {
+              if (right) right.style.display = 'none';
+              if (down) down.style.display = '';
+            }
+          }, 50);
+        });
+      });
+    });
+  </script>
+{% endblock %}

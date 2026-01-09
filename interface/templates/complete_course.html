@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  {% set search_intro_html %}
+    <p class="text-muted mb-3" style="max-width:72ch;">
+      Pull inspiration from similar courses in the knowledge graph, capture the most relevant topics or skills, and slot them into the outline you are completing.
+    </p>
+  {% endset %}
+
+  {% with
+    form_action=url_for('complete_course_route'),
+    storage_key='tk_builder_state_complete',
+    enable_selection=True,
+    builder_enabled=True,
+    search_card_title='Complete Your Existing Course',
+    search_intro_html=search_intro_html,
+    search_button_label='Search Knowledge Graph',
+    course_title_label='Course Title',
+    course_title_placeholder='e.g., Advanced Knowledge Graphs',
+    results=results,
+    graph_data=graph_data,
+    show_builder=show_builder,
+    initial_title=initial_title,
+    page_id='complete'
+  %}
+    {% include 'partials/course_authoring_bundle.html' %}
+  {% endwith %}
+
+{% endblock %}
