@@ -472,7 +472,7 @@ def init_neo4j_connection():
     # Read credentials from .env file (preferred). Do not prefer OS env vars per request.
     uri = env_values.get('NEO4J_URI') or 'bolt://localhost:7687'
     username = env_values.get('NEO4J_USER') or 'neo4j'
-    password = env_values.get('NEO4J_PASSWORD') or 'KG_edu_1'
+    password = env_values.get('NEO4J_PASSWORD')
     # Use a short connection timeout so health checks fail fast if DB is unavailable
     try:
         driver = GraphDatabase.driver(uri, auth=(username, password), connection_timeout=3)
