@@ -1,0 +1,1299 @@
+{% set selection_enabled = enable_selection|default(True, true) %}
+{% set builder_on = builder_enabled|default(True, true) %}
+{% set form_action_url = form_action|default(request.path, true) %}
+{% set storage_key_value = storage_key|default('tk_builder_state_shared', true) %}
+{% set page_identifier = page_id|default('shared', true) %}
+{% set search_title = search_card_title|default('Search Knowledge Graph Courses', true) %}
+{% set search_intro = search_intro_html|default('', true) %}
+{% set button_text = search_button_label|default('Search courses', true) %}
+{% set placeholder_text = course_title_placeholder|default('e.g., Semantic Web', true) %}
+{% set course_title_label = course_title_label|default('Give your Course a Title', true) %}
+{% set require_title = course_title_required|default(True, true) %}
+{% set survey_href = survey_url|default('', true) %}
+{% set survey_text = survey_button_label|default('Go to Survey', true) %}
+{% set results_list = results|default([], true) %}
+{% set has_results = results_list|length > 0 %}
+{% set builder_should_show = builder_on and (show_builder|default(False, true)) %}
+
+<div class="create-page">
+  <div class="card form-section">
+    <div class="card-body">
+      <h2 class="card-title">{{ search_title }}</h2>
+      {% if search_intro %}{{ search_intro|safe }}{% endif %}
+      <form id="courseSearchForm" method="post" action="{{ form_action_url }}">
+        <input type="hidden" name="form_name" value="course_search">
+        <div class="mb-3">
+          <label class="form-label">{{ course_title_label }}</label>
+          <input class="form-control" name="course_title" id="courseTitleInput" {% if require_title %}required{% endif %} placeholder="{{ placeholder_text }}" value="{{ initial_title }}">
+        </div>
+        <button type="submit" class="btn btn-primary" id="searchSimilarCoursesBtn"><i class="bi bi-search"></i> {{ button_text }}</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="row mt-4 g-3{% if not has_results %} d-none{% endif %}" id="resultsRow">
+    {% if has_results %}
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-muted small ms-auto text-end">Use the arrow to collapse or show the visualization panel.</span>
+        <button id="collapseVizBtn" class="btn btn-outline-secondary btn-sm ms-2" type="button" title="Collapse visualization" aria-label="Collapse visualization">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+      <div id="resultsCol" class="col-lg-7">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h3 class="card-title mb-0">Similar Courses in the KG</h3>
+              <div class="text-muted small text-end">
+                <div>Click a row to visualize connections</div>
+                <div>Use the chevron to view topics and levels</div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle" id="resultsTable" style="table-layout: fixed;">
+                <thead>
+                  <tr>
+                    <th style="width: 36px;" class="text-muted small text-center"><span class="visually-hidden">Details</span></th>
+                    <th style="width: 48%;">Title</th>
+                    <th style="width: 10%;">Topics</th>
+                    <th style="width: 24%;">Levels</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in results_list %}
+                    {% set outer_index = loop.index0 %}
+                    <tr class="result-row" data-index="{{ loop.index0 }}">
+                      <td>
+                        <button class="btn btn-sm btn-outline-secondary toggle-details" type="button" data-bs-toggle="collapse" data-bs-target="#detail-{{ loop.index0 }}" aria-expanded="true" aria-controls="detail-{{ loop.index0 }}">
+                          <i class="bi bi-chevron-up"></i> <span class="ms-1">Hide details</span>
+                        </button>
+                      </td>
+                      <td class="fw-semibold" title="{{ r.name or r.uri }}">
+                        {% if r.url %}<a href="{{ r.url }}" target="_blank">{{ r.name or r.uri }}</a>{% else %}{{ r.name or r.uri }}{% endif %}
+                        {% if selection_enabled %}
+                          <div class="form-check mt-1">
+                            <input class="form-check-input select-course" type="checkbox" id="add-course-{{ loop.index0 }}" data-index="{{ loop.index0 }}" data-uri="{{ r.uri }}" data-name="{{ r.name or r.uri }}">
+                            <label class="form-check-label small text-muted" for="add-course-{{ loop.index0 }}">Add course</label>
+                          </div>
+                        {% endif %}
+                      </td>
+                      <td><span class="badge bg-secondary">{{ r.summary.topic_count }}</span></td>
+                      <td>
+                        {% for lvl, cnt in r.summary.levels.items() %}
+                          <span class="badge bg-light text-dark border me-1">{{ lvl }}: {{ cnt }}</span>
+                        {% endfor %}
+                      </td>
+                    </tr>
+                    <tr class="collapse show bg-light" id="detail-{{ loop.index0 }}" data-index="{{ loop.index0 }}">
+                      <td></td>
+                      <td colspan="3">
+                        <div class="py-3">
+                          <div class="mb-2 fw-semibold">Topics and Skills</div>
+                          {% if selection_enabled %}
+                            <div class="mb-2 text-muted small">Check a box to add the Topic or Skill to the course you are building.</div>
+                          {% else %}
+                            <div class="mb-2 text-muted small">Topics and skills associated with this course.</div>
+                          {% endif %}
+                          <div class="d-flex flex-wrap gap-2">
+                            {% for t in r.topics %}
+                              {% if selection_enabled %}
+                                <label class="badge rounded-pill bg-light text-dark border" title="{{ t.uri }}" style="cursor:pointer;">
+                                  <input class="form-check-input me-1 select-topic" type="checkbox" data-index="{{ outer_index }}" data-uri="{{ t.uri }}" data-name="{{ t.name }}" data-level="{{ t.educationalLevel or '' }}" data-theoretical="{{ t.theoretical }}" data-main="{{ t.main }}" style="transform:scale(0.9);">
+                                  {{ t.name }}
+                                  {% if t.educationalLevel %}<span class="ms-1 text-muted">({{ t.educationalLevel }})</span>{% endif %}
+                                  {% if t.main is true %}<span class="ms-1 badge bg-primary">Main</span>{% endif %}
+                                </label>
+                              {% else %}
+                                <span class="badge rounded-pill bg-light text-dark border" title="{{ t.uri }}">
+                                  {{ t.name }}
+                                  {% if t.educationalLevel %}<span class="ms-1 text-muted">({{ t.educationalLevel }})</span>{% endif %}
+                                  {% if t.main is true %}<span class="ms-1 badge bg-primary">Main</span>{% endif %}
+                                </span>
+                              {% endif %}
+                            {% endfor %}
+                            {% for s in r.skills %}
+                              {% if selection_enabled %}
+                                <label class="badge rounded-pill bg-light text-dark border" title="{{ s.uri }}" style="cursor:pointer;">
+                                  <input class="form-check-input me-1 select-skill" type="checkbox" data-index="{{ outer_index }}" data-uri="{{ s.uri }}" data-name="{{ s.name }}" style="transform:scale(0.9);">
+                                  {{ s.name }}
+                                </label>
+                              {% else %}
+                                <span class="badge rounded-pill bg-light text-dark border" title="{{ s.uri }}">{{ s.name }}</span>
+                              {% endif %}
+                            {% endfor %}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="vizCol" class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-body">
+            <h4 class="card-title mb-2">Interactive Knowledge Graph</h4>
+            <style>
+              .legend-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+              .course-legend { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+              .course-legend-item { display:inline-flex; align-items:center; gap:6px; color:#495057; }
+              .course-legend-swatch { width:12px; height:12px; border-radius:3px; background:#adb5bd; border:1px solid rgba(0,0,0,0.25); }
+            </style>
+            <div class="d-flex align-items-center gap-3 mb-2 small d-none">
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="toggleSkills" checked>
+                <label class="form-check-label" for="toggleSkills">Show skills</label>
+              </div>
+            </div>
+            <div id="graphContainer" style="height: 460px; border: 1px solid #e9ecef; border-radius: .5rem;"></div>
+            <div class="mt-2 text-muted" style="font-size: 0.85rem;">
+              <div class="mb-1">Nodes are colored by type. Click and drag to explore.</div>
+              <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="small"><span class="legend-dot" style="background:#2c3e50;"></span> Course</span>
+                <span class="small"><span class="legend-dot" style="background:#2980b9;"></span> Course Session</span>
+                <span class="small"><span class="legend-dot" style="background:#1abc9c;"></span> Knowledge Topic</span>
+                <span class="small"><span class="legend-dot" style="background:#f39c12;"></span> Learning Resource</span>
+                <span class="small"><span class="legend-dot" style="background:#9b59b6;"></span> Organization</span>
+                <span class="small"><span class="legend-dot" style="background:#9b59b6;"></span> Provider</span>
+                <span class="small"><span class="legend-dot" style="background:#e74c3c;"></span> Skill</span>
+                <span class="small"><span class="legend-dot" style="background:#bdc3c7;"></span> Person</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if builder_on %}
+    <div class="card mt-3{% if not builder_should_show %} d-none{% endif %}" id="courseBuilderCard">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Build Your New Course</h4>
+        <div class="mb-3">
+          <label class="form-label">New Course Title <span class="text-danger">*</span></label>
+          <input class="form-control" id="newCourseTitle" required value="{{ initial_title }}">
+          <script>
+            function syncCourseTitleToNewField() {
+              var courseTitleInput = document.getElementById('courseTitleInput');
+              var newCourseTitleInput = document.getElementById('newCourseTitle');
+              var val = courseTitleInput ? courseTitleInput.value : '';
+              if (newCourseTitleInput) newCourseTitleInput.value = val;
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+              var courseTitleInput = document.getElementById('courseTitleInput');
+              syncCourseTitleToNewField();
+              if (courseTitleInput) {
+                courseTitleInput.addEventListener('input', syncCourseTitleToNewField);
+              }
+            });
+          </script>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-lg-6">
+            <div class="border rounded p-2 h-100">
+              <div class="fw-semibold mb-2">Course Metadata</div>
+              <div class="mb-2">
+                <label class="form-label small mb-1">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="metaDescription" rows="2" placeholder="Describe the course" required></textarea>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label small mb-1">Educational Level</label>
+                  <select class="form-select" id="metaLevel">
+                    <option value="">Select level</option>
+                    <option value="PhD">PhD</option>
+                    <option value="Master">Master</option>
+                    <option value="Bachelor">Bachelor</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small mb-1">Language</label>
+                  <select class="form-select" id="metaLanguage">
+                    <option value="">Select language</option>
+                    <option value="bg">Bulgarian</option>
+                    <option value="zh">Chinese</option>
+                    <option value="hr">Croatian</option>
+                    <option value="cs">Czech</option>
+                    <option value="da">Danish</option>
+                    <option value="nl">Dutch</option>
+                    <option value="en">English</option>
+                    <option value="et">Estonian</option>
+                    <option value="fi">Finnish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="el">Greek</option>
+                    <option value="it">Italian</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                    <option value="lv">Latvian</option>
+                    <option value="lt">Lithuanian</option>
+                    <option value="no">Norwegian</option>
+                    <option value="pl">Polish</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="ro">Romanian</option>
+                    <option value="sr">Serbian</option>
+                    <option value="sk">Slovak</option>
+                    <option value="sl">Slovenian</option>
+                    <option value="es">Spanish</option>
+                    <option value="sv">Swedish</option>
+                    <option value="tr">Turkish</option>
+                    <option value="uk">Ukrainian</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mt-2">
+                <label class="form-label small mb-1">Pedagogical Approach</label>
+                <select class="form-select" id="metaPedagogy">
+                  <option value="">Select approach</option>
+                  <option value="Theory">Theory</option>
+                  <option value="Practice">Practice</option>
+                </select>
+              </div>
+              <div class="row g-2 mt-2">
+                <div class="col-md-6">
+                  <label class="form-label small mb-1">Total Time Required <span class="text-danger">*</span></label>
+                  <input class="form-control" id="metaTotalTimeRequired" placeholder="e.g., 10" required inputmode="decimal" pattern="^\d+(?:[.,]\d+)?$">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small mb-1">Time Unit <span class="text-danger">*</span></label>
+                  <select class="form-select" id="metaTimeUnit" required>
+                    <option value="">Select unit</option>
+                    <option value="semester">Semester</option>
+                    <option value="month">Month</option>
+                    <option value="week">Week</option>
+                    <option value="day">Day</option>
+                    <option value="hour">Hour</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small mb-1">License <span class="text-danger">*</span></label>
+                  <select class="form-select" id="metaLicense" required>
+                    <option value="">Select license</option>
+                    <option value="CC BY 4.0">CC BY 4.0</option>
+                    <option value="CC BY-SA 4.0">CC BY-SA 4.0</option>
+                    <option value="CC BY-NC 4.0">CC BY-NC 4.0</option>
+                    <option value="CC BY-ND 4.0">CC BY-ND 4.0</option>
+                    <option value="CC BY-NC-SA 4.0">CC BY-NC-SA 4.0</option>
+                    <option value="CC BY-NC-ND 4.0">CC BY-NC-ND 4.0</option>
+                    <option value="CC0 1.0">CC0 1.0</option>
+                    <option value="GNU GPL v3">GNU GPL v3</option>
+                    <option value="MIT License">MIT License</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="border rounded p-2 h-100">
+              <div class="fw-semibold mb-2">Course Knowledge Graph</div>
+              <div id="course-graph" style="height: 350px; border: 1px solid #ddd;"></div>
+              <div id="course-graph-legend" class="course-legend small text-muted mt-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 align-items-stretch">
+          <div class="col-lg-7 col-12">
+            <div class="border rounded p-2 h-100">
+              <div class="fw-semibold mb-2">Week Lectures (Course Sessions)</div>
+              <div id="weekLecturesNested"></div>
+              <div class="mt-3">
+                <button class="btn btn-primary" type="button" id="btnShowAddWeekLecture">Add new Week Lecture</button>
+                <div id="addWeekLectureForm" style="display:none;" class="mt-3">
+                  <div class="row g-2 mb-2">
+                    <div class="col-9"><input class="form-control" id="weekLectureTitle" placeholder="Week lecture title"></div>
+                    <div class="col-3 d-grid"><button class="btn btn-outline-secondary" type="button" id="btnAddWeekLecture">Add Week Lecture</button></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5 col-12">
+            <div class="border rounded p-2 h-100">
+              <div class="fw-semibold mb-2">Selected Topics &amp; Skills</div>
+              <div class="text-muted small mb-2">Click an item to add it to the active Week Lecture.</div>
+              <style>
+                .pool-item {
+                  border: 1px dashed #ced4da;
+                  background-color: #f8f9fa;
+                  color: #495057;
+                  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+                  cursor: pointer;
+                }
+                .pool-item:hover {
+                  background-color: #e9ecef;
+                }
+                .pool-item-used {
+                  background-color: #d1e7dd !important;
+                  border-color: #badbcc !important;
+                  color: #0f5132 !important;
+                }
+              </style>
+              <div id="selectedTopicsPool" class="d-flex flex-column gap-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-12">
+          <div class="border rounded p-2 mb-3">
+            <div class="fw-semibold mb-2">Course Topics and Skills</div>
+            <div id="builderTopicsSkills" class="d-flex flex-wrap gap-2 small text-wrap"></div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 mt-2">
+          <div class="d-flex justify-content-center gap-3 mt-4">
+            <div class="w-100 d-flex justify-content-center gap-3">
+              {% if survey_href %}
+                <button type="button" class="btn btn-primary btn-lg px-4" id="btnGoToSurvey">
+                  <i class="bi bi-arrow-right-circle"></i> {{ survey_text }}
+                </button>
+              {% endif %}
+              <button type="button" class="btn btn-dark btn-lg px-4" id="btnDownloadJSON">
+                <i class="bi bi-download"></i> Download JSON
+              </button>
+              <button type="button" class="btn btn-success btn-lg px-4 d-none" id="btnSaveProgress">
+                <i class="bi bi-save"></i> Save Progress
+              </button>
+              <button type="button" class="btn btn-dark btn-lg px-4 d-none" id="btnDownloadTTL">
+                <i class="bi bi-braces"></i> Download TTL
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<script id="authoringConfig" type="application/json">{{ {
+  'storageKey': storage_key_value,
+  'enableSelection': selection_enabled,
+  'builderEnabled': builder_on,
+  'pageId': page_identifier
+} | tojson | safe }}</script>
+<script id="resultsData" type="application/json">{{ results_list | tojson | safe }}</script>
+<script id="graphData" type="application/json">{{ graph_data | tojson | safe }}</script>
+<script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+<script>
+    const collapseBtn = document.getElementById('collapseVizBtn');
+    const vizCol = document.getElementById('vizCol');
+    const resultsCol = document.getElementById('resultsCol');
+    let vizCollapsed = false;
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', () => {
+        vizCollapsed = !vizCollapsed;
+        if (vizCollapsed) {
+          if (vizCol) vizCol.style.display = 'none';
+          if (resultsCol) {
+            resultsCol.classList.remove('col-lg-7');
+            resultsCol.classList.add('col-lg-12');
+          }
+          collapseBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
+          collapseBtn.title = 'Expand visualization';
+        } else {
+          if (vizCol) vizCol.style.display = '';
+          if (resultsCol) {
+            resultsCol.classList.remove('col-lg-12');
+            resultsCol.classList.add('col-lg-7');
+          }
+          collapseBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
+          collapseBtn.title = 'Collapse visualization';
+        }
+      });
+    }
+    const results = JSON.parse(document.getElementById('resultsData').textContent || '[]');
+    const configElement = document.getElementById('authoringConfig');
+    const builderConfig = configElement ? JSON.parse(configElement.textContent || '{}') : {};
+    const initialGraph = (() => { const el = document.getElementById('graphData'); return el && el.textContent ? JSON.parse(el.textContent) : null; })();
+    let currentIndex = 0;
+    const STORAGE_KEY = builderConfig.storageKey || 'tk_builder_state_shared';
+    const builderEnabled = builderConfig.builderEnabled !== false;
+    const builder = { title: '', description: '', language: '', educationalLevel: '', pedagogicalApproach: '', timeRequired: '', timeUnit: '', license: '', courses: [], weekLectures: [], providers: [], topics: [], skills: [], competencies: [] };
+
+    const COURSE_GRAPH_GROUPS = {
+      'Course': { color: { background: '#2c3e50', border: '#1b2838' }, font: { color: '#111111' } },
+      'CourseSession': { color: { background: '#2980b9', border: '#1f5f86' }, font: { color: '#111111' } },
+      'KnowledgeTopic': { color: { background: '#1abc9c', border: '#148f77' }, font: { color: '#111111' } },
+      'Resource': { color: { background: '#f39c12', border: '#d98200' }, font: { color: '#111111' } },
+      'Skill': { color: { background: '#e74c3c', border: '#c0392b' }, font: { color: '#111111' } },
+      'Provider': { color: { background: '#9b59b6', border: '#8e44ad' }, font: { color: '#111111' } }
+    };
+
+    const COURSE_GRAPH_LABELS = {
+      'Course': 'Course',
+      'CourseSession': 'Course Session',
+      'KnowledgeTopic': 'Knowledge Topic',
+      'Resource': 'Learning Resource',
+      'Skill': 'Skill',
+      'Provider': 'Provider'
+    };
+
+    function saveState(){
+      if (!builderEnabled) return;
+      try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(builder)); }catch(e){}
+    }
+    function loadState(){
+      if (!builderEnabled) return;
+      try{ const s = sessionStorage.getItem(STORAGE_KEY); if(s){ const obj = JSON.parse(s); Object.assign(builder, obj); } }catch(e){}
+    }
+
+    const navigationEntry = (performance && performance.getEntriesByType) ? performance.getEntriesByType('navigation')[0] : null;
+    const isReloadNavigation = navigationEntry ? navigationEntry.type === 'reload' : (performance && performance.navigation && performance.navigation.type === 1);
+    if (isReloadNavigation) {
+      if (builderEnabled) {
+        try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      }
+    } else {
+      loadState();
+    }
+    if (isReloadNavigation && results && results.length) {
+      window.location.replace(window.location.pathname);
+    }
+
+    function renderGraph(data) {
+      const container = document.getElementById('graphContainer');
+      if (!container) return;
+      const groups = {
+        'Course': { color: { background: '#2c3e50' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+        'CourseSession': { color: { background: '#2980b9' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+        'Topic': { color: { background: '#1abc9c' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+        'KnowledgeTopic': { color: { background: '#1abc9c' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+        'Resource': { color: { background: '#f39c12' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+        'Person': { color: { background: '#bdc3c7' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+        'Organization': { color: { background: '#9b59b6' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+        'Provider': { color: { background: '#9b59b6' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } },
+        'Skill': { color: { background: '#e74c3c' }, font: { color: '#111', strokeWidth: 2, strokeColor: '#fff' } }
+      };
+      const showSkills = document.getElementById('toggleSkills')?.checked;
+      const baseNodes = (data?.nodes || []);
+      const baseEdges = (data?.edges || []);
+      const filteredNodes = showSkills ? baseNodes : baseNodes.filter(n => n.group !== 'Skill');
+      const filteredEdges = showSkills ? baseEdges : baseEdges.filter(e => {
+        const fromIsSkill = baseNodes.find(n => n.id === e.from)?.group === 'Skill';
+        const toIsSkill = baseNodes.find(n => n.id === e.to)?.group === 'Skill';
+        return !fromIsSkill && !toIsSkill;
+      });
+      const nodes = new vis.DataSet(filteredNodes.map(n => ({ id: n.id, label: n.label, group: n.group, shape: 'dot', size: 18, font: { size: 12, color: '#111111' } })));
+      const edges = new vis.DataSet(filteredEdges.map(e => ({ from: e.from, to: e.to, arrows: 'to', label: e.label || '', font: { align: 'horizontal', size: 10, background: 'rgba(255,255,255,0.7)' }, smooth: { type: 'dynamic' } })));
+      const network = new vis.Network(container, { nodes, edges }, { groups, physics: { stabilization: true }, interaction: { hover: true } });
+      return network;
+    }
+
+    function selectResult(index) {
+      currentIndex = index;
+      const item = results[index];
+      renderGraph(item.graph);
+    }
+
+    document.querySelectorAll('tr.result-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const idx = parseInt(row.getAttribute('data-index'));
+        selectResult(idx);
+      });
+    });
+    document.querySelectorAll('tr[id^="detail-"]').forEach(detailRow => {
+      const idxAttr = detailRow.getAttribute('data-index') || detailRow.id.replace('detail-', '');
+      const idx = parseInt(idxAttr);
+      if (Number.isNaN(idx)) return;
+      const forward = () => selectResult(idx);
+      detailRow.addEventListener('click', forward);
+      detailRow.addEventListener('change', forward);
+    });
+    document.querySelectorAll('.toggle-details').forEach(btn => {
+      const targetSelector = btn.getAttribute('data-bs-target');
+      if (!targetSelector) return;
+      const target = document.querySelector(targetSelector);
+      if (!target) return;
+      const icon = btn.querySelector('i');
+      const label = btn.querySelector('span');
+      const setState = (expanded) => {
+        btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        if (icon) icon.className = expanded ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+        if (label) label.textContent = expanded ? 'Hide details' : 'Show details';
+      };
+      target.addEventListener('show.bs.collapse', () => setState(true));
+      target.addEventListener('hide.bs.collapse', () => setState(false));
+      setState(target.classList.contains('show'));
+    });
+    function keyOf(item){ return item?.uri || `name:${(item?.name||'').toLowerCase()}`; }
+    function upsert(list, item) {
+      const k = keyOf(item);
+      if (!k) return;
+      if (!list.some(x => keyOf(x) === k)) list.push(item);
+    }
+    function removeBy(list, key) {
+      const i = list.findIndex(x => keyOf(x) === key);
+      if (i >= 0) list.splice(i, 1);
+    }
+    function mkChip(text, key, onRemove) {
+      const span = document.createElement('span');
+      span.className = 'badge rounded-pill bg-light text-dark border';
+      span.title = key;
+      span.style.display = 'inline-flex';
+      span.style.alignItems = 'center';
+      span.style.gap = '6px';
+      span.textContent = text;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-close btn-close-sm';
+      btn.ariaLabel = 'Remove';
+      btn.style.filter = 'invert(1)';
+      btn.addEventListener('click', onRemove);
+      span.appendChild(btn);
+      return span;
+    }
+
+    function poolItemKey(item) {
+      if (item?.uri) return `uri:${item.uri}`;
+      if (item?.url) return `url:${item.url}`;
+      const label = (item?.name || item?.title || '').toLowerCase();
+      const type = (item?.type || item?.graphType || '').toLowerCase();
+      return `name:${label}::type:${type}`;
+    }
+
+    function weekItemMatchesPool(poolItem, weekItem) {
+      return poolItemKey(poolItem) === poolItemKey(weekItem);
+    }
+
+    function poolItemAssignedElsewhere(poolItem, excludedIndex) {
+      return builder.weekLectures.some((wl, idx) => {
+        if (typeof excludedIndex === 'number' && idx === excludedIndex) return false;
+        return (wl.items || []).some(it => weekItemMatchesPool(poolItem, it));
+      });
+    }
+
+    function removeTopicSkillFromWeeks(poolItem) {
+      const key = poolItemKey(poolItem);
+      builder.weekLectures.forEach(wl => {
+        wl.items = (wl.items || []).filter(it => poolItemKey(it) !== key);
+      });
+    }
+
+    function assignPoolItemToWeek(poolItem) {
+      if (!builder.weekLectures.length) {
+        alert('Please create a Week Lecture before assigning topics or skills.');
+        return;
+      }
+      if (editingWeekIndex === null || editingWeekIndex >= builder.weekLectures.length) {
+        alert('Select "Add Topic/Skill" on a Week Lecture to make it active, then assign topics or skills.');
+        return;
+      }
+      const target = builder.weekLectures[editingWeekIndex];
+      if (!target.items) target.items = [];
+      if (poolItemAssignedElsewhere(poolItem, editingWeekIndex)) {
+        alert('This item is already assigned to another Week Lecture. Remove it from that week before reassigning.');
+        return;
+      }
+      const alreadyPresent = target.items.some(it => weekItemMatchesPool(poolItem, it));
+      if (alreadyPresent) {
+        return;
+      }
+      const entry = {
+        title: poolItem.name || poolItem.title || '',
+        type: poolItem.type || (poolItem.poolType === 'topic' ? 'Knowledge Topic' : 'Skill'),
+        graphType: poolItem.graphType || (poolItem.poolType === 'topic' ? 'KnowledgeTopic' : 'Skill')
+      };
+      if (poolItem.uri) {
+        entry.uri = poolItem.uri;
+        entry.url = poolItem.uri;
+      }
+      if (poolItem.url && !entry.url) {
+        entry.url = poolItem.url;
+      }
+      target.items.push(entry);
+      renderBuilder();
+    }
+
+    function renderSelectedPool() {
+      const host = document.getElementById('selectedTopicsPool');
+      if (!host) return;
+      host.innerHTML = '';
+
+      const topicItems = (builder.topics || []).map(t => ({
+        poolType: 'topic',
+        name: t.name,
+        uri: t.uri,
+        educationalLevel: t.educationalLevel,
+        theoretical: t.theoretical,
+        main: t.main,
+        type: t.type || 'Knowledge Topic',
+        graphType: t.graphType || 'KnowledgeTopic'
+      }));
+      const skillItems = (builder.skills || []).map(s => ({
+        poolType: 'skill',
+        name: s.name,
+        uri: s.uri,
+        type: s.type || 'Skill',
+        graphType: s.graphType || 'Skill'
+      }));
+
+      const combined = topicItems.concat(skillItems);
+      if (!combined.length) {
+        host.innerHTML = '<div class="text-muted small">Select topics or skills from the results list to stage them here.</div>';
+        return;
+      }
+
+      combined.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+      combined.forEach(item => {
+        const assignedWeeks = [];
+        builder.weekLectures.forEach((wl, wlIdx) => {
+          if ((wl.items || []).some(it => weekItemMatchesPool(item, it))) {
+            assignedWeeks.push(wl.order || (wlIdx + 1));
+          }
+        });
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'pool-item btn btn-sm text-start w-100';
+        if (assignedWeeks.length) {
+          button.classList.add('pool-item-used');
+          button.disabled = true;
+          button.setAttribute('aria-disabled', 'true');
+          button.style.pointerEvents = 'none';
+        }
+        const titleLine = document.createElement('div');
+        titleLine.className = 'fw-semibold';
+        titleLine.textContent = item.name || '';
+        button.appendChild(titleLine);
+
+        if (item.poolType === 'topic') {
+          const meta = [];
+          if (item.educationalLevel) meta.push(item.educationalLevel);
+          if (item.main) meta.push('Main');
+          if (meta.length) {
+            const metaLine = document.createElement('div');
+            metaLine.className = 'small text-muted';
+            metaLine.textContent = meta.join(' • ');
+            button.appendChild(metaLine);
+          }
+        }
+
+        const actionLine = document.createElement('div');
+        actionLine.className = 'small text-muted';
+        actionLine.textContent = assignedWeeks.length
+          ? `Added to week${assignedWeeks.length > 1 ? 's' : ''} ${assignedWeeks.join(', ')}`
+          : 'Click to add to the active Week Lecture';
+        button.appendChild(actionLine);
+
+        button.addEventListener('click', () => assignPoolItemToWeek(item));
+        host.appendChild(button);
+      });
+    }
+
+    let editingWeekIndex = null;
+    function renderBuilder() {
+      const nested = document.getElementById('weekLecturesNested');
+      if (nested) {
+        nested.innerHTML = '';
+        builder.weekLectures.sort((a, b) => (a.order || 0) - (b.order || 0));
+        builder.weekLectures.forEach((wl, idx) => {
+          const weekCard = document.createElement('div');
+          weekCard.className = 'card mb-3';
+          weekCard.innerHTML = `<div class='card-header d-flex justify-content-between align-items-center'>
+              <span class='fw-bold'>Week ${wl.order || ''}: ${wl.title || ''}</span>
+              <button class='btn btn-sm btn-outline-danger' type='button'>Remove</button>
+            </div>`;
+          weekCard.querySelector('button').onclick = () => {
+            builder.weekLectures.splice(idx, 1);
+            if (editingWeekIndex === idx) editingWeekIndex = null;
+            renderBuilder();
+            saveState();
+            renderCourseGraph();
+          };
+          const body = document.createElement('div');
+          body.className = 'card-body';
+          const itemsList = document.createElement('div');
+          itemsList.className = 'mb-2';
+          (wl.items || []).forEach((item, iidx) => {
+            const labelType = item.type || item.graphType;
+            const chipLabel = labelType ? `${item.title} (${labelType})` : item.title;
+            const chipKey = item.uri || item.url || `${item.title || 'item'}_${iidx}`;
+            itemsList.appendChild(mkChip(chipLabel, chipKey, () => {
+              wl.items.splice(iidx, 1);
+              renderBuilder();
+              saveState();
+              renderCourseGraph();
+            }));
+          });
+          body.appendChild(itemsList);
+          if (editingWeekIndex === idx) {
+            const formRow = document.createElement('div');
+            formRow.className = 'row g-2 align-items-end';
+            formRow.innerHTML = `
+                <div class='col-6'><input class='form-control' id='topicSkillTitle_${idx}' placeholder='Add Topic/Skill title'></div>
+                <div class='col-6'>
+                  <select class='form-select' id='topicSkillType_${idx}'>
+                    <option value='resource'>Resource</option>
+                    <option value='assessment'>Assessment</option>
+                    <option value='database'>Database</option>
+                  </select>
+                </div>
+                <div class='w-100'></div>
+                <div class='col-8 mt-2'><input class='form-control' id='topicSkillUrl_${idx}' placeholder='URL'></div>
+                <div class='col-4 mt-2 d-grid'><button class='btn btn-secondary' style='width:100%; font-size:0.95rem;' type='button' id='btnAddTopicSkill_${idx}'>Add Topic/Skill to Lecture Week</button></div>
+              `;
+            body.appendChild(formRow);
+            setTimeout(() => {
+              document.getElementById(`btnAddTopicSkill_${idx}`)?.addEventListener('click', () => {
+                const title = document.getElementById(`topicSkillTitle_${idx}`)?.value?.trim();
+                const url = document.getElementById(`topicSkillUrl_${idx}`)?.value?.trim();
+                const rawType = document.getElementById(`topicSkillType_${idx}`)?.value;
+                if (!title || !rawType) return;
+                const displayTypeMap = { resource: 'Resource', assessment: 'Assessment', database: 'Database', topic: 'Knowledge Topic' };
+                const graphTypeMap = { resource: 'Resource', assessment: 'Resource', database: 'Resource', topic: 'KnowledgeTopic' };
+                const itemData = {
+                  title,
+                  url,
+                  type: displayTypeMap[rawType] || rawType,
+                  graphType: graphTypeMap[rawType] || (displayTypeMap[rawType] || rawType)
+                };
+                if (url) itemData.uri = url;
+                wl.items.push(itemData);
+                renderBuilder();
+                saveState();
+                renderCourseGraph();
+              });
+            }, 0);
+          }
+          if (editingWeekIndex !== idx) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-sm btn-outline-primary mt-2';
+            editBtn.textContent = 'Add Topic/Skill';
+            editBtn.onclick = () => {
+              editingWeekIndex = idx;
+              renderBuilder();
+              renderCourseGraph();
+            };
+            body.appendChild(editBtn);
+          }
+          weekCard.appendChild(body);
+          nested.appendChild(weekCard);
+        });
+      }
+      const ts = document.getElementById('builderTopicsSkills');
+      if (ts) {
+        ts.innerHTML = '';
+        builder.weekLectures.sort((a, b) => (a.order || 0) - (b.order || 0));
+        builder.weekLectures.forEach(wl => {
+          const weekDiv = document.createElement('div');
+          weekDiv.className = 'mb-2 ps-3';
+          weekDiv.innerHTML = `<span class='fw-bold text-primary'>Week ${wl.order || ''}: ${wl.title || ''}</span>`;
+          const list = document.createElement('ul');
+          list.className = 'mb-1';
+          (wl.items || []).forEach(item => {
+            const li = document.createElement('li');
+            const rawLink = (item.url || '').trim();
+            const showLink = rawLink && !rawLink.toLowerCase().startsWith('http://example.org/');
+            const linkMarkup = showLink ? `<a href='${rawLink}' target='_blank'>[link]</a>` : '';
+            li.innerHTML = `<span class='fw-semibold'>${item.title}</span> <span class='text-muted'>(${item.type})</span> ${linkMarkup}`;
+            list.appendChild(li);
+          });
+          weekDiv.appendChild(list);
+          ts.appendChild(weekDiv);
+        });
+      }
+      renderSelectedPool();
+      saveState();
+      renderCourseGraph();
+    }
+
+    function buildCourseGraphData() {
+      const nodes = [];
+      const edges = [];
+      const nodeIds = new Set();
+      const topicIds = new Set();
+
+      const addNode = (node) => {
+        if (!node || !node.id || nodeIds.has(node.id)) return;
+        nodes.push(node);
+        nodeIds.add(node.id);
+      };
+
+      const addEdge = (edge) => {
+        if (!edge || !edge.from || !edge.to) return;
+        edges.push(edge);
+      };
+
+      const courseLabel = (builder.title && builder.title.trim()) ? builder.title.trim() : 'Untitled Course';
+      addNode({ id: 'course', label: courseLabel, group: 'Course', title: builder.description || 'Course being authored' });
+
+      const sessions = (builder.weekLectures || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+      sessions.forEach((session, idx) => {
+        const order = session.order || (idx + 1);
+        const sessionId = `session::${order}`;
+        const label = session.title ? `Week ${order}\n${session.title}` : `Week ${order}`;
+        addNode({ id: sessionId, label, group: 'CourseSession', title: session.description || `Week order ${order}` });
+        addEdge({ from: 'course', to: sessionId, label: 'hasCourseInstance' });
+
+        (session.items || []).forEach((item, itemIdx) => {
+          const itemKind = item.graphType || item.type;
+          if (itemKind === 'KnowledgeTopic') {
+            const topicKey = item.uri ? `topic::${item.uri}` : `topic::${sessionId}::${itemIdx}`;
+            if (!topicIds.has(topicKey)) {
+              addNode({
+                id: topicKey,
+                label: item.title || 'Knowledge Topic',
+                group: 'KnowledgeTopic',
+                title: item.uri || item.url || ''
+              });
+              topicIds.add(topicKey);
+            }
+            addEdge({ from: sessionId, to: topicKey, label: 'hasTopic' });
+          } else if (itemKind) {
+            const resourceId = `resource::${sessionId}::${itemIdx}`;
+            addNode({
+              id: resourceId,
+              label: item.title || item.type || item.graphType,
+              group: itemKind === 'Skill' ? 'Skill' : 'Resource',
+              title: item.uri || item.url || ''
+            });
+            const edgeLabel = itemKind === 'Skill' ? 'requiresSkill' : (item.type || item.graphType || itemKind);
+            addEdge({ from: sessionId, to: resourceId, label: edgeLabel });
+          }
+        });
+      });
+
+      (builder.skills || []).forEach((skill, idx) => {
+        const skillId = skill.uri ? `skill::${skill.uri}` : `skill::${idx}`;
+        addNode({ id: skillId, label: skill.name || 'Skill', group: 'Skill', title: skill.uri || '' });
+        addEdge({ from: 'course', to: skillId, label: 'requiresSkill' });
+      });
+
+      (builder.providers || []).forEach((provider, idx) => {
+        const providerId = provider.uri ? `provider::${provider.uri}` : `provider::${idx}`;
+        const providerTitle = [provider.email, provider.location].filter(Boolean).join(' • ');
+        addNode({ id: providerId, label: provider.name || 'Provider', group: 'Provider', title: providerTitle || provider.uri || '' });
+        addEdge({ from: 'course', to: providerId, label: 'hasProvider' });
+      });
+
+      return { nodes, edges };
+    }
+
+    function renderCourseGraphLegend() {
+      const legendHost = document.getElementById('course-graph-legend');
+      if (!legendHost) return;
+      legendHost.innerHTML = '';
+      Object.entries(COURSE_GRAPH_LABELS).forEach(([groupKey, displayLabel]) => {
+        const color = COURSE_GRAPH_GROUPS[groupKey]?.color?.background || '#adb5bd';
+        const item = document.createElement('span');
+        item.className = 'course-legend-item';
+        const swatch = document.createElement('span');
+        swatch.className = 'course-legend-swatch';
+        swatch.style.backgroundColor = color;
+        const text = document.createElement('span');
+        text.textContent = displayLabel;
+        item.appendChild(swatch);
+        item.appendChild(text);
+        legendHost.appendChild(item);
+      });
+    }
+
+    function renderCourseGraph() {
+      renderCourseGraphLegend();
+      const container = document.getElementById('course-graph');
+      if (!container) return;
+      if (typeof vis === 'undefined') {
+        container.innerHTML = '<div class="text-muted small">Loading course visualization…</div>';
+        return;
+      }
+
+      const graphData = buildCourseGraphData();
+      if (graphData.nodes.length <= 1 && graphData.edges.length === 0) {
+        container.innerHTML = '<div class="text-muted small">Add week lectures and topics to visualize the course structure.</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+
+      const data = {
+        nodes: new vis.DataSet(graphData.nodes),
+        edges: new vis.DataSet(graphData.edges)
+      };
+
+      const options = {
+        groups: COURSE_GRAPH_GROUPS,
+        nodes: {
+          shape: 'dot',
+          size: 20,
+          borderWidth: 2,
+          font: { size: 14, face: 'Inter', color: '#111111' }
+        },
+        edges: {
+          arrows: 'to',
+          color: { color: '#7f8c8d', highlight: '#2c3e50' },
+          width: 2,
+          font: { align: 'horizontal', size: 12, color: '#2c3e50', background: 'rgba(255,255,255,0.75)' },
+          smooth: { type: 'cubicBezier', roundness: 0.4 }
+        },
+        physics: {
+          enabled: true,
+          stabilization: { iterations: 200 },
+          barnesHut: {
+            gravitationalConstant: -2000,
+            centralGravity: 0.25,
+            springLength: 140,
+            springConstant: 0.03,
+            damping: 0.09,
+            avoidOverlap: 0.6
+          }
+        },
+        interaction: { hover: true, tooltipDelay: 120, hideEdgesOnDrag: false }
+      };
+
+      new vis.Network(container, data, options);
+    }
+
+    ['input', 'change'].forEach(evt => {
+      document.getElementById('newCourseTitle')?.addEventListener(evt, renderCourseGraph);
+    });
+    document.getElementById('btnSaveProgress')?.addEventListener('click', renderCourseGraph);
+    document.addEventListener('DOMContentLoaded', renderCourseGraph);
+    document.getElementById('btnShowAddWeekLecture')?.addEventListener('click', () => {
+      const form = document.getElementById('addWeekLectureForm');
+      if (form) form.style.display = form.style.display === 'none' ? '' : 'none';
+    });
+
+    document.getElementById('btnAddWeekLecture')?.addEventListener('click', () => {
+      const title = document.getElementById('weekLectureTitle')?.value?.trim();
+      if (!title) return;
+      const order = builder.weekLectures.length + 1;
+      builder.weekLectures.push({ title, order, items: [] });
+      document.getElementById('weekLectureTitle').value = '';
+      document.getElementById('addWeekLectureForm').style.display = 'none';
+      editingWeekIndex = builder.weekLectures.length - 1;
+      renderBuilder();
+      saveState();
+    });
+
+    function syncCheckbox(kind, uri, checked) {
+      let sel = '';
+      if (kind === 'course') sel = `.select-course[data-uri="${CSS.escape(uri)}"]`;
+      if (kind === 'topic') sel = `.select-topic[data-uri="${CSS.escape(uri)}"]`;
+      if (kind === 'competency') sel = `.select-competency[data-uri="${CSS.escape(uri)}"]`;
+      document.querySelectorAll(sel).forEach(el => { el.checked = checked; });
+    }
+    document.querySelectorAll('.select-course').forEach(el => {
+      el.addEventListener('change', () => {
+        const item = { uri: el.getAttribute('data-uri'), name: el.getAttribute('data-name') };
+        if (el.checked) upsert(builder.courses, item); else removeBy(builder.courses, keyOf(item));
+        renderBuilder();
+      });
+    });
+
+    document.querySelectorAll('.select-topic').forEach(el => {
+      el.addEventListener('change', () => {
+        const item = {
+          uri: el.getAttribute('data-uri'),
+          name: el.getAttribute('data-name'),
+          educationalLevel: el.getAttribute('data-level') || undefined,
+          theoretical: el.getAttribute('data-theoretical') === 'True' || el.getAttribute('data-theoretical') === 'true',
+          main: el.getAttribute('data-main') === 'True' || el.getAttribute('data-main') === 'true',
+          type: 'Knowledge Topic',
+          graphType: 'KnowledgeTopic'
+        };
+        if (el.checked) {
+          upsert(builder.topics, item);
+          renderSelectedPool();
+          saveState();
+          renderCourseGraph();
+        } else {
+          removeBy(builder.topics, keyOf(item));
+          removeTopicSkillFromWeeks(item);
+          renderBuilder();
+        }
+      });
+    });
+    document.querySelectorAll('.select-skill').forEach(el => {
+      el.addEventListener('change', () => {
+        const item = {
+          uri: el.getAttribute('data-uri'),
+          name: el.getAttribute('data-name'),
+          type: 'Skill',
+          graphType: 'Skill'
+        };
+        if (el.checked) {
+          upsert(builder.skills, item);
+          renderSelectedPool();
+          saveState();
+          renderCourseGraph();
+        } else {
+          removeBy(builder.skills, keyOf(item));
+          removeTopicSkillFromWeeks(item);
+          renderBuilder();
+        }
+      });
+    });
+
+    const titleEl = document.getElementById('newCourseTitle');
+    if (titleEl){
+      if (isReloadNavigation) {
+        builder.title = '';
+        titleEl.value = '';
+      } else if (!builder.title) {
+        builder.title = titleEl.value || (document.getElementById('courseTitleInput')?.value || '');
+        titleEl.value = builder.title || titleEl.value || '';
+      } else {
+        titleEl.value = builder.title;
+      }
+      titleEl.addEventListener('input', (e) => { builder.title = e.target.value; saveState(); renderCourseGraph(); });
+    }
+    const topTitleEl = document.getElementById('courseTitleInput');
+    if (topTitleEl){
+      topTitleEl.value = builder.title || '';
+      topTitleEl.addEventListener('input', (e) => {
+        builder.title = e.target.value;
+        const newTitle = document.getElementById('newCourseTitle');
+        if (newTitle) newTitle.value = e.target.value;
+        saveState();
+        renderCourseGraph();
+      });
+    }
+    document.getElementById('metaDescription')?.addEventListener('input', e => { builder.description = e.target.value; saveState(); });
+    document.getElementById('metaLevel')?.addEventListener('change', e => { builder.educationalLevel = e.target.value; saveState(); });
+    document.getElementById('metaLanguage')?.addEventListener('change', e => { builder.language = e.target.value; saveState(); });
+    document.getElementById('metaPedagogy')?.addEventListener('change', e => { builder.pedagogicalApproach = e.target.value; saveState(); });
+    document.getElementById('metaTotalTimeRequired')?.addEventListener('input', e => {
+      const val = e.target.value.trim();
+      const normalized = val.replace(',', '.');
+      builder.timeRequired = normalized;
+      if (val && Number.isNaN(parseFloat(normalized))) {
+        e.target.classList.add('is-invalid');
+      } else {
+        e.target.classList.remove('is-invalid');
+      }
+      saveState();
+    });
+    document.getElementById('metaTimeUnit')?.addEventListener('change', e => { builder.timeUnit = e.target.value; saveState(); });
+    document.getElementById('metaLicense')?.addEventListener('change', e => { builder.license = e.target.value; saveState(); });
+    const mdesc=document.getElementById('metaDescription'); if(mdesc) mdesc.value = builder.description||'';
+    const mlev=document.getElementById('metaLevel'); if(mlev) mlev.value = builder.educationalLevel||'';
+    const mlang=document.getElementById('metaLanguage'); if(mlang) mlang.value = builder.language||'';
+    const mped=document.getElementById('metaPedagogy'); if(mped) mped.value = builder.pedagogicalApproach||'';
+    const mtotal=document.getElementById('metaTotalTimeRequired'); if(mtotal) mtotal.value = builder.timeRequired||'';
+    const munit=document.getElementById('metaTimeUnit'); if(munit) munit.value = builder.timeUnit||'';
+    const mlic=document.getElementById('metaLicense'); if(mlic) mlic.value = builder.license||'';
+
+    function download(filename, content, mime) {
+      const blob = new Blob([content], { type: mime || 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function fileSlug(s) {
+      const base = (s && s.trim()) ? s.trim().toLowerCase() : 'new_course';
+      return base.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').substring(0, 60) || 'new_course';
+    }
+
+    function buildJSON() {
+      const courseGraph = buildCourseGraphData();
+      return JSON.stringify({
+        title: builder.title || 'Untitled',
+        description: builder.description || '',
+        educationalLevel: builder.educationalLevel || '',
+        language: builder.language || '',
+        pedagogicalApproach: builder.pedagogicalApproach || '',
+        timeRequired: builder.timeRequired || '',
+        timeUnit: builder.timeUnit || '',
+        license: builder.license || '',
+        courses: builder.courses,
+        weekLectures: builder.weekLectures,
+        providers: builder.providers,
+        topics: builder.topics,
+        skills: builder.skills,
+        competencies: builder.competencies,
+        courseGraph
+      }, null, 2);
+    }
+
+    function ttlEscape(str) {
+      return (str || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    }
+
+    function buildTTL() {
+      const nl = '\n';
+      const lines = [
+        '@prefix schema: <http://schema.org/> .',
+        '@prefix courses: <https://w3id.org/def/courses#> .',
+        '@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .',
+        ''
+      ];
+
+      const title = builder.title && builder.title.trim() ? builder.title.trim() : 'Untitled';
+      lines.push('[ a schema:Course ;');
+      lines.push(`  schema:name "${ttlEscape(title)}" ;`);
+      if (builder.description && builder.description.trim()) lines.push(`  schema:description "${ttlEscape(builder.description.trim())}" ;`);
+      if (builder.language && builder.language.trim()) lines.push(`  schema:inLanguage "${ttlEscape(builder.language.trim())}" ;`);
+      if (builder.educationalLevel && builder.educationalLevel.trim()) lines.push(`  schema:educationalLevel "${ttlEscape(builder.educationalLevel.trim())}" ;`);
+      if (builder.pedagogicalApproach && builder.pedagogicalApproach.trim()) lines.push(`  courses:pedagogicalApproach "${ttlEscape(builder.pedagogicalApproach.trim())}" ;`);
+      if (builder.courses.length) {
+        const refs = builder.courses.filter(c => c?.uri).map(c => `<${c.uri}>`);
+        if (refs.length) lines.push(`  schema:isBasedOn ${refs.join(', ')} ;`);
+      }
+      if (builder.timeRequired && builder.timeRequired.trim()) lines.push(`  schema:timeRequired "${ttlEscape(builder.timeRequired.trim())}" ;`);
+      if (builder.timeUnit && builder.timeUnit.trim()) lines.push(`  courses:timeUnit "${ttlEscape(builder.timeUnit.trim())}" ;`);
+      if (builder.license && builder.license.trim()) lines.push(`  schema:license "${ttlEscape(builder.license.trim())}" ;`);
+
+      const sessions = (builder.weekLectures || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+      if (sessions.length) {
+        const renderedSessions = sessions.map((session, idx) => {
+          const order = session.order || (idx + 1);
+          const sessionLabel = session.title && session.title.trim() ? session.title.trim() : `Week ${order}`;
+          const parts = [
+            'a courses:CourseSession',
+            `schema:position "${order}"^^xsd:integer`,
+            `schema:name "${ttlEscape(sessionLabel)}"`
+          ];
+          if (session.description && session.description.trim()) parts.push(`schema:description "${ttlEscape(session.description.trim())}"`);
+
+          const topics = [];
+          const resources = [];
+          const skills = [];
+
+          (session.items || []).forEach((item) => {
+            const kind = (item.graphType || item.type || '').toLowerCase();
+            if (kind === 'knowledgetopic') {
+              if (item.uri) {
+                topics.push(`<${item.uri}>`);
+              } else {
+                const topicParts = ['a courses:KnowledgeTopic'];
+                if (item.title) topicParts.push(`schema:name "${ttlEscape(item.title)}"`);
+                topics.push(`[ ${topicParts.join(' ; ')} ]`);
+              }
+            } else if (kind === 'skill') {
+              if (item.uri) {
+                skills.push(`<${item.uri}>`);
+              } else {
+                const skillParts = ['a courses:Skill'];
+                if (item.title) skillParts.push(`schema:name "${ttlEscape(item.title)}"`);
+                skills.push(`[ ${skillParts.join(' ; ')} ]`);
+              }
+            } else {
+              const resParts = ['a courses:LearningResource'];
+              if (item.title) resParts.push(`schema:name "${ttlEscape(item.title)}"`);
+              if (item.url || item.uri) resParts.push(`schema:url "${ttlEscape((item.url || item.uri || '').trim())}"`);
+              if (item.type && item.type !== 'Knowledge Topic' && item.type !== 'Skill') resParts.push(`courses:resourceType "${ttlEscape(item.type)}"`);
+              resources.push(`[ ${resParts.join(' ; ')} ]`);
+            }
+          });
+
+          if (topics.length) parts.push(`courses:hasTopic ${topics.join(', ')}`);
+          if (resources.length) parts.push(`courses:hasResource ${resources.join(', ')}`);
+          if (skills.length) parts.push(`courses:requiresSkill ${skills.join(', ')}`);
+
+          return `[ ${parts.join(' ; ')} ]`;
+        });
+
+        lines.push(`  courses:hasCourseInstance ${renderedSessions.join(', ')} ;`);
+      }
+
+      if (builder.skills && builder.skills.length) {
+        const skillObjs = builder.skills.map(skill => {
+          if (skill.uri) return `<${skill.uri}>`;
+          const parts = ['a courses:Skill'];
+          if (skill.name) parts.push(`schema:name "${ttlEscape(skill.name)}"`);
+          if (skill.educationalLevel) parts.push(`schema:educationalLevel "${ttlEscape(skill.educationalLevel)}"`);
+          return `[ ${parts.join(' ; ')} ]`;
+        });
+        if (skillObjs.length) lines.push(`  courses:requiresSkill ${skillObjs.join(', ')} ;`);
+      }
+
+      if (builder.competencies && builder.competencies.length) {
+        const compObjs = builder.competencies.map(c => {
+          if (c.uri) return `<${c.uri}>`;
+          const parts = ['a courses:Competency'];
+          if (c.name) parts.push(`schema:name "${ttlEscape(c.name)}"`);
+          if (c.educationalLevel) parts.push(`schema:educationalLevel "${ttlEscape(c.educationalLevel)}"`);
+          return `[ ${parts.join(' ; ')} ]`;
+        });
+        if (compObjs.length) lines.push(`  courses:competencyRequired ${compObjs.join(', ')} ;`);
+      }
+
+      if (builder.providers && builder.providers.length) {
+        const providerObjs = builder.providers.map(p => {
+          if (p.uri) return `<${p.uri}>`;
+          const parts = [p.type === 'Person' ? 'a schema:Person' : 'a schema:Organization'];
+          if (p.name) parts.push(`schema:name "${ttlEscape(p.name)}"`);
+          if (p.email && p.type === 'Person') parts.push(`schema:email "${ttlEscape(p.email)}"`);
+          if (p.location && p.type === 'Organization') parts.push(`schema:location "${ttlEscape(p.location)}"`);
+          return `[ ${parts.join(' ; ')} ]`;
+        });
+        if (providerObjs.length) lines.push(`  schema:provider ${providerObjs.join(', ')} ;`);
+      }
+
+      if (lines[lines.length - 1].endsWith(' ;')) {
+        lines[lines.length - 1] = lines[lines.length - 1].slice(0, -2);
+      }
+      lines.push('].');
+      return lines.join(nl) + nl;
+    }
+
+    function validateMandatory() {
+      const missing = [];
+      const desc = (builder.description||'').trim();
+      const timeReq = (builder.timeRequired||'').trim();
+      const timeReqIsNumber = timeReq ? !Number.isNaN(parseFloat(timeReq)) : false;
+      const timeUnit = (builder.timeUnit||'').trim();
+      const license = (builder.license||'').trim();
+      const mark = (id, ok) => { const el = document.getElementById(id); if (!el) return; el.classList.toggle('is-invalid', !ok); el.classList.toggle('is-valid', ok); };
+      mark('metaDescription', !!desc);
+      mark('metaTotalTimeRequired', !!timeReq && timeReqIsNumber);
+      mark('metaTimeUnit', !!timeUnit);
+      mark('metaLicense', !!license);
+      if (!desc) missing.push('Description');
+      if (!timeReq) missing.push('Time Required');
+      else if (!timeReqIsNumber) missing.push('Time Required (must be numeric)');
+      if (!timeUnit) missing.push('Time Unit');
+      if (!license) missing.push('License');
+      if (missing.length) {
+        alert(`Please complete the mandatory fields: ${missing.join(', ')}`);
+        const firstId = !desc ? 'metaDescription' : (!timeReq || !timeReqIsNumber ? 'metaTotalTimeRequired' : (!timeUnit ? 'metaTimeUnit' : 'metaLicense'));
+        document.getElementById(firstId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById(firstId)?.focus();
+        return false;
+      }
+      return true;
+    }
+
+    document.getElementById('btnDownloadJSON')?.addEventListener('click', () => {
+      if (!validateMandatory()) return;
+      download(`${fileSlug(builder.title)}.json`, buildJSON(), 'application/json');
+    });
+    document.getElementById('btnDownloadTTL')?.addEventListener('click', () => {
+      if (!validateMandatory()) return;
+      download(`${fileSlug(builder.title)}.ttl`, buildTTL(), 'text/turtle');
+    });
+    document.getElementById('btnGoToSurvey')?.addEventListener('click', () => {
+      if ({{ 'true' if survey_href else 'false' }}) {
+        window.open('{{ survey_href }}', '_blank', 'noopener');
+      }
+    });
+    document.getElementById('btnSaveProgress')?.addEventListener('click', () => {
+      if (!validateMandatory()) return;
+      saveState();
+      renderCourseGraph();
+    });
+
+    if (initialGraph) {
+      renderGraph(initialGraph);
+    } else if (results && results.length > 0) {
+      selectResult(0);
+    }
+
+    (function applySaved(){
+      builder.courses.forEach(it => it.uri && syncCheckbox('course', it.uri, true));
+      builder.topics.forEach(it => it.uri && syncCheckbox('topic', it.uri, true));
+      builder.competencies.forEach(it => it.uri && syncCheckbox('competency', it.uri, true));
+      renderBuilder();
+    })();
+</script>

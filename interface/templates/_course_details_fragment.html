@@ -1,0 +1,101 @@
+<div class="course-detail-fragment">
+  {% if course.url %}
+    <p class="mb-3">
+      <i class="bi bi-link-45deg"></i>
+      <a href="{{ course.url }}" target="_blank">Course page</a>
+    </p>
+  {% endif %}
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 text-uppercase text-muted">Summary</h2>
+          <ul class="list-unstyled m-0">
+            <li><span class="text-muted">Topics:</span> <strong>{{ course.summary.topic_count }}</strong></li>
+            <li><span class="text-muted">Theoretical:</span> <strong>{{ course.summary.theoretical_count }}</strong></li>
+            <li><span class="text-muted">Practical:</span> <strong>{{ course.summary.practical_count }}</strong></li>
+          </ul>
+          {% if course.summary.levels %}
+            <div class="mt-2">
+              <div class="text-muted small">Educational levels among topics</div>
+              <ul class="small m-0">
+                {% for lvl, cnt in course.summary.levels.items() %}
+                  <li>{{ lvl }}: {{ cnt }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 text-uppercase text-muted">Providers</h2>
+          {% if course.providers %}
+            <ul class="m-0">
+              {% for p in course.providers %}
+                <li>
+                  {{ p.name }}
+                  {% if p.type %}<span class="badge bg-light text-dark border ms-1">{{ p.type }}</span>{% endif %}
+                  {% if p.location %}<span class="text-muted">· {{ p.location }}</span>{% endif %}
+                  {% if p.email %}<span class="text-muted">· {{ p.email }}</span>{% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-muted">No providers found</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Topics taught</h2>
+      {% if course.topics and course.topics|length > 0 %}
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th scope="col">Topic</th>
+                <th scope="col" class="text-center">Theoretical</th>
+                <th scope="col" class="text-center">Main</th>
+                <th scope="col">Educational Level</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in course.topics %}
+              <tr>
+                <td>{{ t.name }}</td>
+                <td class="text-center">{% if t.theoretical is sameas true %}<span class="badge bg-info">Yes</span>{% elif t.theoretical is sameas false %}<span class="badge bg-success">No</span>{% else %}<span class="text-muted">–</span>{% endif %}</td>
+                <td class="text-center">{% if t.main is sameas true %}<i class="bi bi-star-fill text-warning"></i>{% elif t.main is sameas false %}<i class="bi bi-star text-muted"></i>{% else %}<span class="text-muted">–</span>{% endif %}</td>
+                <td>{{ t.educationalLevel or '—' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <span class="badge bg-light text-muted border">No topics found</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Related competencies</h2>
+      {% if course.related_competencies and course.related_competencies|length > 0 %}
+        <ul class="m-0">
+          {% for c in course.related_competencies %}
+            <li>{{ c.name }}{% if c.educationalLevel %} <span class="text-muted">· {{ c.educationalLevel }}</span>{% endif %}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <span class="badge bg-light text-muted border">No competencies found</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
